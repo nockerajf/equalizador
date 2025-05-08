@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <ListView
+        android:id="@+id/audioTrackListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/textViewSongTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nenhuma faixa selecionada"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/textViewArtist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:gravity="center_horizontal"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/textViewCurrentTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:minWidth="40dp"
+            android:gravity="center"
+            android:layout_marginEnd="8dp"/>
+
+        <SeekBar
+            android:id="@+id/seekBarProgress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="1000"
+            />
+
+        <TextView
+            android:id="@+id/textViewTotalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0:00"
+            android:minWidth="40dp"
+            android:gravity="center"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="24dp">
+
+        <Button
+            android:id="@+id/button_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Play" />
+        <Button
+            android:id="@+id/button_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pause" />
+        <Button
+            android:id="@+id/button_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stop"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Equalizador"
+        android:gravity="center_horizontal"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:minHeight="180dp"
+        android:gravity="center">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/eqBand1_maxLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+15 dB"
+                android:textSize="10sp" />
+
+            <SeekBar
+                android:id="@+id/eqBand1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:max="3000"
+                android:progress="1500"
+                android:thumbTint="?attr/colorPrimary"
+                android:progressTint="?attr/colorPrimary"
+                android:rotation="270" />
+
+            <TextView
+                android:id="@+id/eqBand1_minLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-15 dB"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/eqBand1_freqLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="60 Hz"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/eqBand2_maxLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+15 dB"
+                android:textSize="10sp" />
+
+            <SeekBar
+                android:id="@+id/eqBand2"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:max="3000"
+                android:progress="1500"
+                android:thumbTint="?attr/colorPrimary"
+                android:progressTint="?attr/colorPrimary"
+                android:rotation="270" />
+
+            <TextView
+                android:id="@+id/eqBand2_minLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-15 dB"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/eqBand2_freqLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="230 Hz"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/eqBand3_maxLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+15 dB"
+                android:textSize="10sp" />
+
+            <SeekBar
+                android:id="@+id/eqBand3"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:max="3000"
+                android:progress="1500"
+                android:thumbTint="?attr/colorPrimary"
+                android:progressTint="?attr/colorPrimary"
+                android:rotation="270" />
+
+            <TextView
+                android:id="@+id/eqBand3_minLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-15 dB"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/eqBand3_freqLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="910 Hz"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <TextView
+                android:id="@+id/eqBand4_maxLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+15 dB"
+                android:textSize="10sp" />
+
+            <SeekBar
+                android:id="@+id/eqBand4"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:max="3000"
+                android:progress="1500"
+                android:thumbTint="?attr/colorPrimary"
+                android:progressTint="?attr/colorPrimary"
+                android:rotation="270" />
+
+            <TextView
+                android:id="@+id/eqBand4_minLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-15 dB"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/eqBand4_freqLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3.6 kHz"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/eqBand5_maxLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+15 dB"
+                android:textSize="10sp" />
+
+            <SeekBar
+                android:id="@+id/eqBand5"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:max="3000"
+                android:progress="1500"
+                android:thumbTint="?attr/colorPrimary"
+                android:progressTint="?attr/colorPrimary"
+                android:rotation="270" />
+
+            <TextView
+                android:id="@+id/eqBand5_minLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-15 dB"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/eqBand5_freqLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="14 kHz"
+                android:textSize="11sp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

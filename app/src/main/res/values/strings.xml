@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">audioservice</string>
+    <string name="play_description">Play audio</string>
+    <string name="pause_description">Pause audio</string>
+    <string name="stop_description">Stop audio</string>
+</resources>
