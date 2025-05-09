@@ -99,16 +99,16 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:minHeight="180dp"
-        android:gravity="center">
+        android:gravity="center"
+        android:minHeight="280dp"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/eqBand1_maxLabel"
@@ -124,9 +124,9 @@
                 android:layout_weight="1"
                 android:max="3000"
                 android:progress="1500"
-                android:thumbTint="?attr/colorPrimary"
                 android:progressTint="?attr/colorPrimary"
-                android:rotation="270" />
+                android:rotation="270"
+                android:thumbTint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/eqBand1_minLabel"
@@ -139,56 +139,17 @@
                 android:id="@+id/eqBand1_freqLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="60 Hz"
-                android:textSize="11sp"/>
+                android:text="Low"
+                android:textSize="11sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <TextView
-                android:id="@+id/eqBand2_maxLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+15 dB"
-                android:textSize="10sp" />
-
-            <SeekBar
-                android:id="@+id/eqBand2"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:max="3000"
-                android:progress="1500"
-                android:thumbTint="?attr/colorPrimary"
-                android:progressTint="?attr/colorPrimary"
-                android:rotation="270" />
-
-            <TextView
-                android:id="@+id/eqBand2_minLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-15 dB"
-                android:textSize="10sp" />
-
-            <TextView
-                android:id="@+id/eqBand2_freqLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="230 Hz"
-                android:textSize="11sp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/eqBand3_maxLabel"
@@ -204,9 +165,9 @@
                 android:layout_weight="1"
                 android:max="3000"
                 android:progress="1500"
-                android:thumbTint="?attr/colorPrimary"
                 android:progressTint="?attr/colorPrimary"
-                android:rotation="270" />
+                android:rotation="270"
+                android:thumbTint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/eqBand3_minLabel"
@@ -219,48 +180,9 @@
                 android:id="@+id/eqBand3_freqLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="910 Hz"
-                android:textSize="11sp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <TextView
-                android:id="@+id/eqBand4_maxLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+15 dB"
-                android:textSize="10sp" />
-
-            <SeekBar
-                android:id="@+id/eqBand4"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:max="3000"
-                android:progress="1500"
-                android:thumbTint="?attr/colorPrimary"
-                android:progressTint="?attr/colorPrimary"
-                android:rotation="270" />
-
-            <TextView
-                android:id="@+id/eqBand4_minLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-15 dB"
-                android:textSize="10sp" />
-
-            <TextView
-                android:id="@+id/eqBand4_freqLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="3.6 kHz"
-                android:textSize="11sp"/>
+                android:text="Med"
+                android:textSize="11sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
@@ -284,9 +206,9 @@
                 android:layout_weight="1"
                 android:max="3000"
                 android:progress="1500"
-                android:thumbTint="?attr/colorPrimary"
                 android:progressTint="?attr/colorPrimary"
-                android:rotation="270" />
+                android:rotation="270"
+                android:thumbTint="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/eqBand5_minLabel"
@@ -299,8 +221,9 @@
                 android:id="@+id/eqBand5_freqLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="14 kHz"
-                android:textSize="11sp"/>
+                android:text="Hig"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
