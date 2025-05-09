@@ -30,7 +30,15 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_UPDATE_UI = "UPDATE_UI"
         const val EXTRA_CURRENT_POS = "CURRENT_POSITION"
         const val EXTRA_DURATION    = "DURATION"
+
+        // Load the native library
+        init {
+            System.loadLibrary("native-lib")
+        }
     }
+
+    // Declare the native method
+    private external fun stringFromJNI(): String
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var playButton: Button
@@ -126,6 +134,9 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
         })
 
+        // Call the native method and display the result
+        val textView: TextView = findViewById(R.id.textViewSongTitle)
+        textView.text = stringFromJNI()
     }
 
     override fun onDestroy() {
