@@ -1,4 +1,4 @@
-package com.grupo11.equalizador
+package com.grupo11.audioservice
 
 import org.junit.Test
 
