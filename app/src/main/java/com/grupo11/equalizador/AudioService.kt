@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -21,7 +22,8 @@ class AudioService : Service() {
     private var mediaSession: MediaSessionCompat? = null
     private val notificationId = 1
     private val handler = Handler()
-
+    private var currentTrackResId: Int = -1
+    private var trackId : Int = -1
     override fun onCreate() {
         super.onCreate()
         Log.d("grupo11", "Service onCreate() called")
@@ -45,64 +47,36 @@ class AudioService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("grupo11", "onStartCommand received - Action: ${intent?.action}")
-
-        intent?.action?.let { action ->
-            when (action) {
-                "PLAY" -> playAudio()
-                "PAUSE" -> pauseAudio()
-                "STOP" -> stopAudio()
-                "SEEK" -> {
-                    val seekPosition = intent.getIntExtra("SEEK_POSITION", 0)
-                    mediaPlayer?.seekTo(seekPosition)
-                    Log.d("grupo11", "MediaPlayer seek to position: $seekPosition")
+        val action = intent?.action
+        when(action) {
+            "PLAY" -> {
+                // pega o resId que veio do MainActivity
+                trackId = intent.getIntExtra("TRACK_RES_ID", -1)
+                if (trackId != -1 && trackId != currentTrackResId) {
+                    // troca de música
+                    currentTrackResId = trackId
+                    mediaPlayer?.reset()
+                    val afd = resources.openRawResourceFd(trackId)
+                    mediaPlayer?.setDataSource(
+                        afd.fileDescriptor, afd.startOffset, afd.length
+                    )
+                    mediaPlayer?.prepare()
                 }
-                else -> {
-                    Log.d("grupo11", "Unknown action received: $action")
-                    // Optionally, handle any non-matching cases here
-                }
+                mediaPlayer?.start()
             }
-        } ?: run {
-            Log.d("grupo11", "Intent is null or has no action")
-        }
+            "PAUSE" -> mediaPlayer?.pause()
+            "STOP"  -> {
 
+                mediaPlayer?.stop()
+                stopForeground(true)
+                stopSelf()
+            }
+            "SEEK"  -> {
+                val pos = intent.getIntExtra("SEEK_POSITION", 0)
+                mediaPlayer?.seekTo(pos)
+            }
+        }
         return START_STICKY
-    }
-
-
-    private fun playAudio() {
-        Log.d("grupo11", "Attempting to play audio")
-        try {
-            if (mediaPlayer != null && !mediaPlayer!!.isPlaying) {
-                mediaPlayer!!.start()
-                Log.d("grupo11", "Audio started playing")
-            }
-        } catch (e: Exception) {
-            Log.e("grupo11", "Error playing audio", e)
-        }
-    }
-
-    private fun pauseAudio() {
-        Log.d("grupo11", "Attempting to pause audio")
-        if (mediaPlayer != null && mediaPlayer!!.isPlaying) {
-            mediaPlayer!!.pause()
-            Log.d("grupo11", "Audio paused")
-        }
-    }
-
-    private fun stopAudio() {
-        Log.d("grupo11", "Attempting to stop audio")
-        if (mediaPlayer != null) {
-            mediaPlayer!!.stop()
-            mediaPlayer!!.reset()
-            val fileDescriptor = resources.openRawResourceFd(R.raw.instrumental1)
-            mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
-            mediaPlayer!!.prepare()
-            Log.d("grupo11", "Audio stopped and MediaPlayer reset")
-        }
-        stopForeground(true)
-        stopSelf()
-        Log.d("grupo11", "Foreground service stopped")
     }
 
     private fun updateSeekBarProgress() {
@@ -176,7 +150,13 @@ class AudioService : Service() {
             }
     }
 
+
+
     companion object {
         private const val CHANNEL_ID = "AudioServiceChannel"
     }
 }
+data class AudioTrack(
+  val title: String,   // nome para exibição
+  val resId: Int       // ID do recurso raw (R.raw.xxx)
+)
