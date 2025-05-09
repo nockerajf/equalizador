@@ -34,14 +34,10 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_CURRENT_POS = "CURRENT_POSITION"
         const val EXTRA_DURATION    = "DURATION"
 
-        // Load the native library
-        init {
-            System.loadLibrary("native-lib")
-        }
     }
 
     // Declare the native method
-    private external fun stringFromJNI(): String
+   // private external fun stringFromJNI(): String
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var playButton: Button
@@ -55,6 +51,8 @@ class MainActivity : AppCompatActivity() {
 
     private val handler = Handler()
     private var currentPosition = 0
+    private lateinit var filter: NativeThreeBand
+    private val sr = 48_000
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -139,13 +137,22 @@ class MainActivity : AppCompatActivity() {
 
         // Call the native method and display the result
         val textView: TextView = findViewById(R.id.textViewSongTitle)
-        textView.text = stringFromJNI()
+        //textView.text = stringFromJNI()
+        filter = NativeThreeBand(sr)
+        filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
+
+        // Exemplo de buffer de teste
+        val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sr).toFloat() }
+        filter.process(pcm)
+
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
         handler.removeCallbacksAndMessages(null)
+        filter.release()   // importante!
         Log.d("grupo 11", "onDestroy")
     }
 
