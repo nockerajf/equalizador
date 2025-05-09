@@ -12,27 +12,26 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
+
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "MainActivity"
-        // As mesmas Actions que o seu AudioService conhece:
         const val ACTION_PLAY   = "PLAY"
         const val ACTION_PAUSE  = "PAUSE"
         const val ACTION_STOP   = "STOP"
         const val ACTION_SEEK   = "SEEK"
         const val EXTRA_TRACK   = "TRACK_RES_ID"
         const val EXTRA_POSITION = "SEEK_POSITION"
-        const val ACTION_UPDATE_UI = "UPDATE_UI"       // Broadcast vindo do Service
+        const val ACTION_UPDATE_UI = "UPDATE_UI"
         const val EXTRA_CURRENT_POS = "CURRENT_POSITION"
         const val EXTRA_DURATION    = "DURATION"
     }
 
-    // UI
     private lateinit var recyclerView: RecyclerView
     private lateinit var playButton: Button
     private lateinit var pauseButton: Button
@@ -41,18 +40,21 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textViewCurrentTime: TextView
     private lateinit var textViewTotalTime: TextView
     private lateinit var textViewSongTitle: TextView
+    private var selectedTrackResId: Int? = null
 
-    // Handler para animar o SeekBar (caso queira)
     private val handler = Handler()
     private var currentPosition = 0
 
-    // Recebe atualizações do Service via LocalBroadcastManager
     private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(ctx: Context?, intent: Intent?) {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d("grupo 11", "onReceive - Broadcast received")
+            val action = intent?.action
+            Log.d("grupo 11", "Broadcast recebido → action=$action")
+
             if (intent?.action == ACTION_UPDATE_UI) {
                 val pos = intent.getIntExtra(EXTRA_CURRENT_POS, 0)
                 val dur = intent.getIntExtra(EXTRA_DURATION, 0)
-                Log.d(TAG, "UI Broadcast: pos=$pos / dur=$dur")
+                Log.d("grupo 112", "Broadcast recebido → pos=$pos dur=$dur")
                 if (dur > 0) {
                     seekBarProgress.max = dur
                     seekBarProgress.progress = pos
@@ -66,9 +68,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.d(TAG, "onCreate")
+        Log.d("grupo 11", "onCreate")
 
-        // 1) findViewById de tudo
         recyclerView       = findViewById(R.id.audioTrackRecyclerView)
         playButton         = findViewById(R.id.button_play)
         pauseButton        = findViewById(R.id.button_pause)
@@ -77,58 +78,66 @@ class MainActivity : AppCompatActivity() {
         textViewCurrentTime= findViewById(R.id.textViewCurrentTime)
         textViewTotalTime  = findViewById(R.id.textViewTotalTime)
         textViewSongTitle  = findViewById(R.id.textViewSongTitle)
-
-        // 2) Configura RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this)
+        val intentFilter = IntentFilter("UPDATE_UI")
+        ContextCompat.registerReceiver(this, broadcastReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED)
+        Log.d("grupo 11", "BroadcastReceiver registered.")
+
         val tracks = loadAudioTracks()
         recyclerView.adapter = AudioAdapter(tracks) { track ->
-            // Clique na faixa dispara PLAY com o resId
             textViewSongTitle.text = track.title
-            sendToService(ACTION_PLAY, Bundle().apply {
-                putInt(EXTRA_TRACK, track.resId)
-            })
+            selectedTrackResId = track.resId
+            sendToService(ACTION_PLAY, Bundle().apply { putInt(EXTRA_TRACK, track.resId) })
             Toast.makeText(this, "Tocando: ${track.title}", Toast.LENGTH_SHORT).show()
+            Log.d("grupo 11", "Faixa selecionada → ${track.title} id=${track.resId}")
         }
 
-        // 3) Botões Play / Pause / Stop
-        playButton.setOnClickListener  { sendToService(ACTION_PLAY, null) }
-        pauseButton.setOnClickListener { sendToService(ACTION_PAUSE, null) }
+        playButton.setOnClickListener  {
+            if (selectedTrackResId != null) {
+                sendToService(ACTION_PLAY, Bundle().apply { putInt(EXTRA_TRACK, selectedTrackResId!!) })
+                Log.d("grupo 11", "Play pressionado")
+            } else {
+                Toast.makeText(this, "Selecione uma faixa primeiro", Toast.LENGTH_SHORT).show()
+            }
+        }
+        pauseButton.setOnClickListener {
+            sendToService(ACTION_PAUSE, null)
+            Log.d("grupo 11", "Pause pressionado")
+        }
         stopButton.setOnClickListener  {
-            // Para e reseta posição
             sendToService(ACTION_STOP, null)
             sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, 0) })
+            seekBarProgress.max = 0
+            seekBarProgress.progress = 0
+            textViewCurrentTime.text = formatMs(0)
+            textViewTotalTime.text    = formatMs(0)
+            Log.d("grupo 11", "Stop pressionado")
         }
 
-        // 4) SeekBar manual (usuário arrasta)
         seekBarProgress.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     currentPosition = progress
-                    sendToService(ACTION_SEEK, Bundle().apply {
-                        putInt(EXTRA_POSITION, progress)
-                    })
+                    sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, progress) })
+                    Log.d("grupo 11", "Seek manual → $progress")
                 }
             }
             override fun onStartTrackingTouch(sb: SeekBar?) { handler.removeCallbacksAndMessages(null) }
             override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
         })
-        startAutoUpdate()
 
-        // 5) Registra o receiver
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(broadcastReceiver, IntentFilter(ACTION_UPDATE_UI))
     }
 
     override fun onDestroy() {
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
         handler.removeCallbacksAndMessages(null)
+        Log.d("grupo 11", "onDestroy")
     }
 
     private fun startAutoUpdate() {
         handler.postDelayed(object: Runnable {
             override fun run() {
-                // mantem o indicador em tela, recebe updates reais via Broadcast
                 seekBarProgress.progress = currentPosition
                 handler.postDelayed(this, 1000)
             }
@@ -140,7 +149,7 @@ class MainActivity : AppCompatActivity() {
             it.action = action
             extras?.let { b -> it.putExtras(b) }
             startService(it)
-            Log.d(TAG, "Sent to Service → $action : $extras")
+            Log.d("grupo 11", "Intent enviada → $action $extras")
         }
     }
 
@@ -150,7 +159,6 @@ class MainActivity : AppCompatActivity() {
         return String.format("%d:%02d", m, s)
     }
 
-    // Varre R.raw e cria lista
     private fun loadAudioTracks(): List<AudioTrack> {
         val list = mutableListOf<AudioTrack>()
         R.raw::class.java.fields.forEach { f ->
@@ -163,6 +171,7 @@ class MainActivity : AppCompatActivity() {
                 list += AudioTrack(name, id)
             }
         }
+        Log.d("grupo 11", "Tracks carregadas: ${list.size}")
         return list
     }
 }

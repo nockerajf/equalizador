@@ -26,7 +26,7 @@ class AudioService : Service() {
     private var trackId : Int = -1
     override fun onCreate() {
         super.onCreate()
-        Log.d("grupo11", "Service onCreate() called")
+        Log.d("grupo 11", "Service onCreate() called")
 
         mediaPlayer = MediaPlayer()
         mediaPlayer!!.reset()
@@ -40,7 +40,7 @@ class AudioService : Service() {
 
         createNotificationChannel()
         startForeground(notificationId, createNotification())
-        Log.d("grupo11", "Foreground service started with notification")
+        Log.d("grupo 11", "Foreground service started with notification")
 
         // Start updating UI using handler
         updateSeekBarProgress()
@@ -85,22 +85,22 @@ class AudioService : Service() {
                 if (mediaPlayer != null && mediaPlayer!!.isPlaying) {
                     val currentPosition = mediaPlayer!!.currentPosition
                     val duration = mediaPlayer!!.duration
-                    Log.d("grupo11", "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
+                    Log.d("grupo 11", "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
 
                     val intent = Intent("UPDATE_UI")
                     intent.putExtra("CURRENT_POSITION", currentPosition)
                     intent.putExtra("DURATION", duration)
 
                     sendBroadcast(intent)
-                    Log.d("grupo11", "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
+                    Log.d("grupo 11", "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
                 } else {
-                    Log.d("grupo11", "MediaPlayer is not playing.")
+                    Log.d("grupo 11", "MediaPlayer is not playing.")
                     val intent = Intent("UPDATE_UI")
                     intent.putExtra("CURRENT_POSITION", 0)
                     intent.putExtra("DURATION", 0)
 
                     sendBroadcast(intent)
-                    Log.d("grupo11", "Broadcast sent with Current Position: 0 and Duration: 0.")
+                    Log.d("grupo 11", "Broadcast sent with Current Position: 0 and Duration: 0.")
                 }
                 handler.postDelayed(this, 1000)
             }
@@ -113,7 +113,7 @@ class AudioService : Service() {
         mediaPlayer?.release()
         mediaPlayer = null
         mediaSession?.release()
-        Log.d("grupo11", "Service onDestroy() called, MediaPlayer and MediaSession released")
+        Log.d("grupo 11", "Service onDestroy() called, MediaPlayer and MediaSession released")
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -123,7 +123,7 @@ class AudioService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d("grupo11", "Creating notification channel")
+            Log.d("grupo 11", "Creating notification channel")
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Audio Service Channel",
@@ -131,12 +131,12 @@ class AudioService : Service() {
             )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(serviceChannel)
-            Log.d("grupo11", "Notification channel created")
+            Log.d("grupo 11", "Notification channel created")
         }
     }
 
     private fun createNotification(): Notification {
-        Log.d("grupo11", "Creating notification")
+        Log.d("grupo 11", "Creating notification")
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
@@ -146,7 +146,7 @@ class AudioService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .build().also {
-                Log.d("grupo11", "Notification created")
+                Log.d("grupo 11", "Notification created")
             }
     }
 
