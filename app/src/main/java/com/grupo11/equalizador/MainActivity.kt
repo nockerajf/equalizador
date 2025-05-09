@@ -37,8 +37,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Declare the native method
+    // Declare the native methods
     private external fun stringFromJNI(): String
+    private external fun initEngine()
+    private external fun playAudioWithEqualizer(audioPath: String)
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var playButton: Button
@@ -137,6 +139,13 @@ class MainActivity : AppCompatActivity() {
         // Call the native method and display the result
         val textView: TextView = findViewById(R.id.textViewSongTitle)
         textView.text = stringFromJNI()
+
+        // Initialize OpenSL ES engine
+        initEngine()
+
+        // Play audio with equalizer
+        val audioPath = "file:///android_asset/sample.mp3" // Replace with your audio file path
+        playAudioWithEqualizer(audioPath)
     }
 
     override fun onDestroy() {
