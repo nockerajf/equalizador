@@ -1,4 +1,4 @@
-package com.grupo11.equalizador
+package com.grupo11.audioservice
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.grupo11.equalizador", appContext.packageName)
+        assertEquals("com.grupo11.audioservice", appContext.packageName)
     }
 }
