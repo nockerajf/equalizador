@@ -16,6 +16,9 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.grupo11.equalizador.service.AudioService
+import com.grupo11.equalizador.data.AudioTrack
+import com.grupo11.equalizador.ui.AudioAdapter
 
 
 class MainActivity : AppCompatActivity() {

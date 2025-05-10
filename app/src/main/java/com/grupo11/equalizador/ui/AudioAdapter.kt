@@ -1,11 +1,12 @@
-package com.grupo11.equalizador
+package com.grupo11.equalizador.ui
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.grupo11.equalizador.R
+import com.grupo11.equalizador.data.AudioTrack
 
 class AudioAdapter(
     private val tracks: List<AudioTrack>,
