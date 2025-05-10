@@ -45,7 +45,7 @@ class AudioServiceTest {
         mockHandler = mock(Handler::class.java)
 
         // Create an instance of AudioService
-        audioService = spy(AudioService(_applicationContext))
+        audioService = spy(AudioService())
 
         // Inject mocks into the service
         audioService.apply {
@@ -53,6 +53,7 @@ class AudioServiceTest {
             mediaPlayer = mockMediaPlayer
             mediaSession = mockMediaSession
             notificationManager = mockNotificationManager
+            _context = _applicationContext
         }
     }
 

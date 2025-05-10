@@ -17,9 +17,7 @@ import androidx.annotation.VisibleForTesting
 import com.grupo11.equalizador.MainActivity
 import com.grupo11.equalizador.R
 
-class AudioService(
-    var _context: Context
-) : Service() {
+class AudioService() : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var mediaPlayer: MediaPlayer? = null
@@ -32,6 +30,9 @@ class AudioService(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var notificationManager : NotificationManager? = null
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var _context: Context = this
     
     private val notificationId = 1
     private val handler = Handler()
