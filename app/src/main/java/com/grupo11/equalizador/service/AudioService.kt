@@ -17,7 +17,7 @@ import androidx.annotation.VisibleForTesting
 import com.grupo11.equalizador.MainActivity
 import com.grupo11.equalizador.R
 
-class AudioService() : Service() {
+class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var mediaPlayer: MediaPlayer? = null
