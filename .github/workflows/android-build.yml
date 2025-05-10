@@ -63,7 +63,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action/linux@v2
         if: always()
         with:
-          files: ${{ env.main_project_module }}/build/test-results/testDebugUnitTest
+          files: ${{ env.main_project_module }}/build/test-results/testDebugUnitTest/*.xml
 
       # Run Build Project
       - name: Build gradle project
