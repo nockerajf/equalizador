@@ -12,31 +12,37 @@ import android.os.Handler
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import com.grupo11.equalizador.MainActivity
 import com.grupo11.equalizador.R
 
 class AudioService : Service() {
 
-    private var mediaPlayer: MediaPlayer? = null
-    private var audioManager: AudioManager? = null
-    private var mediaSession: MediaSessionCompat? = null
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var mediaPlayer: MediaPlayer? = null
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var audioManager: AudioManager? = null
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var mediaSession: MediaSessionCompat? = null
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var notificationManager : NotificationManager? = null
+    
     private val notificationId = 1
     private val handler = Handler()
     private var currentTrackResId: Int = -1
     private var trackId : Int = -1
+
+
     override fun onCreate() {
         super.onCreate()
         Log.d("grupo 11", "Service onCreate() called")
 
-        mediaPlayer = MediaPlayer()
-        mediaPlayer!!.reset()
-
-        val fileDescriptor = resources.openRawResourceFd(R.raw.dunno)
-        mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
-        mediaPlayer!!.prepare()
-
-        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        mediaSession = MediaSessionCompat(this, "AudioService")
+        createMediaPlayerInstance()
+        createAudioManager()
+        createMediaSession()
 
         createNotificationChannel()
         startForeground(notificationId, createNotification())
@@ -45,6 +51,28 @@ class AudioService : Service() {
         // Start updating UI using handler
         updateSeekBarProgress()
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createMediaPlayerInstance() {
+        mediaPlayer = MediaPlayer()
+        mediaPlayer!!.reset()
+        val fileDescriptor = resources.openRawResourceFd(R.raw.dunno)
+        mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
+        mediaPlayer!!.prepare()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createAudioManager() {
+        Log.d("grupo 11", "Creating AudioManager instance")
+        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createMediaSession() {
+        Log.d("grupo 11", "Creating MediaSession instance")
+        mediaSession = MediaSessionCompat(this, "AudioService")
+    }
+
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
@@ -121,15 +149,16 @@ class AudioService : Service() {
         return null
     }
 
-    private fun createNotificationChannel() {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createNotificationChannel() {
         Log.d("grupo 11", "Creating notification channel")
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
             "Audio Service Channel",
             NotificationManager.IMPORTANCE_DEFAULT
         )
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(serviceChannel)
+        notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(serviceChannel)
         Log.d("grupo 11", "Notification channel created")
     }
 

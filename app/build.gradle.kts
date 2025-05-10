@@ -48,6 +48,11 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
+
+    // Add Mockito dependencies
+    testImplementation("org.mockito:mockito-core:5.5.0") // Core Mockito library
+    androidTestImplementation("org.mockito:mockito-android:5.5.0") // Mockito for Android tests
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("androidx.core:core:1.1.0")
