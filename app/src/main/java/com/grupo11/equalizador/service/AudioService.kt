@@ -1,4 +1,4 @@
-package com.grupo11.equalizador.service
+package com.grupo11.equalizador
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -33,14 +33,16 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var _context: Context = this
-    
+
     private val notificationId = 1
     private val handler = Handler()
     private var currentTrackResId: Int = -1
     private var trackId : Int = -1
-
+    private lateinit var filter: NativeThreeBand
+    private val sr = 48_000
 
     override fun onCreate() {
+
         super.onCreate()
         Log.d("grupo 11", "Service onCreate() called")
 
@@ -54,6 +56,14 @@ class AudioService : Service() {
 
         // Start updating UI using handler
         updateSeekBarProgress()
+
+        //textView.text = stringFromJNI()
+        filter = NativeThreeBand(sr)
+        filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
+
+        // Exemplo de buffer de teste
+        val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sr).toFloat() }
+        filter.process(pcm)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -107,6 +117,19 @@ class AudioService : Service() {
                 val pos = intent.getIntExtra("SEEK_POSITION", 0)
                 mediaPlayer?.seekTo(pos)
             }
+            "UPDATE_LOW_GAIN" -> {
+                val gain = intent.getFloatExtra("GAIN", -1f)
+                filter.updateLowBandGain(gain)
+            }
+            "UPDATE_MID_GAIN" -> {
+                val gain = intent.getFloatExtra("GAIN", -1f)
+                filter.updateMidBandGain(gain)
+            }
+            "UPDATE_HIGH_GAIN" -> {
+                val gain = intent.getFloatExtra("GAIN", -1f)
+                filter.updateHighBandGain(gain)
+            }
+            else -> Log.d("grupo 11", "Unknown action: $action")
         }
         return START_STICKY
     }

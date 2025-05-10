@@ -24,6 +24,21 @@ class NativeThreeBand(sampleRate: Int) : AutoCloseable {
         if (nativePtr != 0L && buffer.isNotEmpty())
             nativeProcess(nativePtr, buffer, buffer.size)
     }
+    /** Atualiza o ganho do filtro de graves. */
+    fun updateLowBandGain(gain: Float) {
+        if (nativePtr != 0L)
+            nativeUpdateLowBandGain(gain)
+    }
+    /** Atualiza o ganho do filtro de médios. */
+    fun updateMidBandGain(gain: Float) {
+        if (nativePtr != 0L)
+            nativeUpdateMidBandGain(gain)
+    }
+    /** Atualiza o ganho do filtro de agudos. */
+    fun updateHighBandGain(gain: Float) {
+        if (nativePtr != 0L)
+            nativeUpdateHighBandGain(gain)
+    }
 
     /** Libera a instância nativa (você também pode chamar close()). */
     fun release() = close()
@@ -54,6 +69,10 @@ class NativeThreeBand(sampleRate: Int) : AutoCloseable {
     private external fun nativeDestroy(handle: Long)
 
     private external fun nativeCreate(sampleRate: Int): Long
+
+    private external fun nativeUpdateLowBandGain(gain: Float)
+    private external fun nativeUpdateMidBandGain(gain: Float)
+    private external fun nativeUpdateHighBandGain(gain: Float)
 
     companion object {
         init {                      // carrega a .so apenas uma vez
