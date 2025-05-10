@@ -17,7 +17,9 @@ import androidx.annotation.VisibleForTesting
 import com.grupo11.equalizador.MainActivity
 import com.grupo11.equalizador.R
 
-class AudioService : Service() {
+class AudioService(
+    var _context: Context
+) : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var mediaPlayer: MediaPlayer? = null
@@ -30,8 +32,6 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var notificationManager : NotificationManager? = null
-
-    var mContext : Context? = null
     
     private val notificationId = 1
     private val handler = Handler()
@@ -59,27 +59,21 @@ class AudioService : Service() {
     fun createMediaPlayerInstance() {
         mediaPlayer = MediaPlayer()
         mediaPlayer!!.reset()
-        if (mContext != null) {
-            val fileDescriptor = mContext!!.resources.openRawResourceFd(R.raw.dunno)
-            mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
-            mediaPlayer!!.prepare()
-        }
+        val fileDescriptor = _context.resources.openRawResourceFd(R.raw.dunno)
+        mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
+        mediaPlayer!!.prepare()
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createAudioManager() {
         Log.d("grupo 11", "Creating AudioManager instance")
-        if (mContext != null) {
-            audioManager = mContext!!.getSystemService(AUDIO_SERVICE) as AudioManager
-        }
+        audioManager = _context.getSystemService(AUDIO_SERVICE) as AudioManager
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createMediaSession() {
         Log.d("grupo 11", "Creating MediaSession instance")
-        if (mContext != null) {
-            mediaSession = MediaSessionCompat(mContext!!, "AudioService")
-        }
+        mediaSession = MediaSessionCompat(_context, "AudioService")
     }
 
 
@@ -93,7 +87,7 @@ class AudioService : Service() {
                     // troca de música
                     currentTrackResId = trackId
                     mediaPlayer?.reset()
-                    val afd = resources.openRawResourceFd(trackId)
+                    val afd = _context.resources.openRawResourceFd(trackId)
                     mediaPlayer?.setDataSource(
                         afd.fileDescriptor, afd.startOffset, afd.length
                     )
@@ -166,16 +160,14 @@ class AudioService : Service() {
             "Audio Service Channel",
             NotificationManager.IMPORTANCE_DEFAULT
         )
-        if (mContext != null){
-            notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(serviceChannel)
-            Log.d("grupo 11", "Notification channel created")
-        }
+        notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(serviceChannel)
+        Log.d("grupo 11", "Notification channel created")
     }
 
     private fun createNotification(): Notification {
         Log.d("grupo 11", "Creating notification")
-        val notificationIntent = Intent(mContext, MainActivity::class.java)
+        val notificationIntent = Intent(_context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
         return Notification.Builder(this, CHANNEL_ID)

@@ -1,7 +1,9 @@
 package com.grupo11.equalizador.service
 
 import android.app.NotificationManager
+import androidx.test.core.app.ApplicationProvider
 import android.app.Service.STOP_FOREGROUND_REMOVE
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -17,7 +19,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28])
+@Config(sdk = [28],
+    resourceDir = "src/main/res",
+    manifest = "src/main/AndroidManifest.xml"
+)
 class AudioServiceTest {
 
     private lateinit var audioService: AudioService
@@ -26,6 +31,7 @@ class AudioServiceTest {
     private lateinit var mockMediaSession: MediaSessionCompat
     private lateinit var mockNotificationManager: NotificationManager
     private lateinit var mockHandler: Handler
+    private val _applicationContext: Context = ApplicationProvider.getApplicationContext()
 
     @Before
     fun setUp() {
@@ -39,7 +45,7 @@ class AudioServiceTest {
         mockHandler = mock(Handler::class.java)
 
         // Create an instance of AudioService
-        audioService = spy(AudioService())
+        audioService = spy(AudioService(_applicationContext))
 
         // Inject mocks into the service
         audioService.apply {
