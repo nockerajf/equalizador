@@ -27,7 +27,7 @@
         </activity>
 
         <service
-            android:name=".AudioService"
+            android:name=".service.AudioService"
             android:enabled="true"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" />

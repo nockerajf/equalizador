@@ -1,19 +1,19 @@
-package com.grupo11.equalizador
+package com.grupo11.equalizador.service
 
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
+import com.grupo11.equalizador.MainActivity
+import com.grupo11.equalizador.R
 
 class AudioService : Service() {
 
@@ -68,7 +68,7 @@ class AudioService : Service() {
             "STOP"  -> {
 
                 mediaPlayer?.stop()
-                stopForeground(true)
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
             "SEEK"  -> {
@@ -122,17 +122,15 @@ class AudioService : Service() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d("grupo 11", "Creating notification channel")
-            val serviceChannel = NotificationChannel(
-                CHANNEL_ID,
-                "Audio Service Channel",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
-            Log.d("grupo 11", "Notification channel created")
-        }
+        Log.d("grupo 11", "Creating notification channel")
+        val serviceChannel = NotificationChannel(
+            CHANNEL_ID,
+            "Audio Service Channel",
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(serviceChannel)
+        Log.d("grupo 11", "Notification channel created")
     }
 
     private fun createNotification(): Notification {
@@ -156,7 +154,3 @@ class AudioService : Service() {
         private const val CHANNEL_ID = "AudioServiceChannel"
     }
 }
-data class AudioTrack(
-  val title: String,   // nome para exibição
-  val resId: Int       // ID do recurso raw (R.raw.xxx)
-)

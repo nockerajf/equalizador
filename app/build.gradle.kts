@@ -53,5 +53,23 @@ dependencies {
     implementation("androidx.core:core:1.1.0")
     implementation("androidx.media:media:1.6.0")
     implementation("androidx.emoji2:emoji2:1.0.0")
+}
 
+
+tasks.withType<Test> {
+    // Enable the HTML report
+    reports.html.required.set(true)
+
+    // Optionally, configure the report destination directory
+    reports.html.outputLocation.set(layout.buildDirectory.dir("reports/tests"))
+
+    // Optionally, configure test logging for more detailed output in the report
+    testLogging {
+        events("passed", "skipped", "failed") // Include passed, skipped, and failed tests in the log
+        showStandardStreams = true // Show standard output and error streams
+    }
+}
+
+tasks.named("build") {
+    dependsOn("testDebugUnitTest")
 }
