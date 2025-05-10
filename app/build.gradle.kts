@@ -60,8 +60,14 @@ tasks.withType<Test> {
     // Enable the HTML report
     reports.html.required.set(true)
 
-    // Optionally, configure the report destination directory
-    reports.html.outputLocation.set(layout.buildDirectory.dir("reports/tests"))
+    // Enable the XML report
+    reports.junitXml.required.set(true)
+
+    // Optionally, configure the report destination directory for XML
+    reports.junitXml.outputLocation.set(layout.buildDirectory.dir("reports/tests/xml"))
+
+    // Optionally, configure the report destination directory for HTML
+    reports.html.outputLocation.set(layout.buildDirectory.dir("reports/tests/html"))
 
     // Optionally, configure test logging for more detailed output in the report
     testLogging {

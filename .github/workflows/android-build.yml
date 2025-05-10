@@ -15,6 +15,9 @@ on:
     branches:
       - main
 
+permissions:
+  checks: write
+  pull-requests: write
 
 jobs:
   build:
@@ -55,6 +58,12 @@ jobs:
         with:
           name: ${{ env.date_today }} - ${{ env.repository_name }} - UT Reports
           path: ${{ env.main_project_module }}/build/reports/tests/testDebugUnitTest
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/linux@v2
+        if: always()
+        with:
+          files: ${{ env.main_project_module }}/build/test-results/testDebugUnitTest
 
       # Run Build Project
       - name: Build gradle project
