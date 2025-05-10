@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -29,6 +30,8 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var notificationManager : NotificationManager? = null
+
+    var mContext : Context? = null
     
     private val notificationId = 1
     private val handler = Handler()
@@ -56,21 +59,27 @@ class AudioService : Service() {
     fun createMediaPlayerInstance() {
         mediaPlayer = MediaPlayer()
         mediaPlayer!!.reset()
-        val fileDescriptor = resources.openRawResourceFd(R.raw.dunno)
-        mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
-        mediaPlayer!!.prepare()
+        if (mContext != null) {
+            val fileDescriptor = mContext!!.resources.openRawResourceFd(R.raw.dunno)
+            mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
+            mediaPlayer!!.prepare()
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createAudioManager() {
         Log.d("grupo 11", "Creating AudioManager instance")
-        audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        if (mContext != null) {
+            audioManager = mContext!!.getSystemService(AUDIO_SERVICE) as AudioManager
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createMediaSession() {
         Log.d("grupo 11", "Creating MediaSession instance")
-        mediaSession = MediaSessionCompat(this, "AudioService")
+        if (mContext != null) {
+            mediaSession = MediaSessionCompat(mContext!!, "AudioService")
+        }
     }
 
 
@@ -157,14 +166,16 @@ class AudioService : Service() {
             "Audio Service Channel",
             NotificationManager.IMPORTANCE_DEFAULT
         )
-        notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager?.createNotificationChannel(serviceChannel)
-        Log.d("grupo 11", "Notification channel created")
+        if (mContext != null){
+            notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager?.createNotificationChannel(serviceChannel)
+            Log.d("grupo 11", "Notification channel created")
+        }
     }
 
     private fun createNotification(): Notification {
         Log.d("grupo 11", "Creating notification")
-        val notificationIntent = Intent(this, MainActivity::class.java)
+        val notificationIntent = Intent(mContext, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
         return Notification.Builder(this, CHANNEL_ID)
