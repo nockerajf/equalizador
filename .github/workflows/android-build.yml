@@ -18,6 +18,14 @@ on:
 permissions:
   checks: write
   pull-requests: write
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -64,6 +72,20 @@ jobs:
         if: always()
         with:
           files: ${{ env.main_project_module }}/build/test-results/testDebugUnitTest/*.xml
+
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v2
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        if: github.ref == 'refs/heads/main'
+        with:
+          # Upload entire repository
+          path: ${{ env.main_project_module }}/build/reports/tests/testDebugUnitTest/
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deployment
+        uses: actions/deploy-pages@v1
 
       # Run Build Project
       - name: Build gradle project
