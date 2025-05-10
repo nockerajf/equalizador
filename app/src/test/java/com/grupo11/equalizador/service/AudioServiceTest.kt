@@ -5,6 +5,8 @@ import androidx.test.core.app.ApplicationProvider
 import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Context
 import android.content.Intent
+import android.content.res.AssetFileDescriptor
+import android.content.res.Resources
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Handler
@@ -44,6 +46,9 @@ class AudioServiceTest {
         mockNotificationManager = mock(NotificationManager::class.java)
         mockHandler = mock(Handler::class.java)
 
+        val mockResources = mock(Resources::class.java)
+        val mockAssetFileDescriptor = mock(AssetFileDescriptor::class.java)
+
         // Create an instance of AudioService
         audioService = spy(AudioService())
 
@@ -54,6 +59,11 @@ class AudioServiceTest {
             mediaSession = mockMediaSession
             notificationManager = mockNotificationManager
             _context = _applicationContext
+        }
+
+        `when`(mockResources.openRawResourceFd(anyInt())).thenReturn(mockAssetFileDescriptor)
+        audioService._context = mock(Context::class.java).apply {
+            `when`(resources).thenReturn(mockResources)
         }
     }
 
