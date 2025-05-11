@@ -1,13 +1,19 @@
 #include <jni.h>
 #include "ThreeBandFilter.h"
 #include <android/log.h>
+#include <cmath>   // powf()
+
+
 
 #define LOG_TAG "NativeThreeBand"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
 #define JNI_FN(pkg, cls, name) \
   Java_##pkg##_##cls##_##name
-
+/* ---------- dB → linear ---------- */
+static inline float db2lin(float db) {     // agora visível
+    return powf(10.f, db / 20.f);
+}
 extern "C" {
 
 // ------- cria nova instância e devolve ponteiro como jlong
@@ -49,25 +55,31 @@ JNI_FN(com_grupo11_equalizador, NativeThreeBand, nativeDestroy)
     delete f;
 }
 
+// -------- LOW ----------
 JNIEXPORT void JNICALL
 JNI_FN(com_grupo11_equalizador, NativeThreeBand, nativeUpdateLowBandGain)
-        (JNIEnv *, jobject,jfloat gain) {
-    LOGD("LowGain %f", gain);
-
+        (JNIEnv*, jobject, jlong handle, jfloat gainDb) {
+    auto* f = reinterpret_cast<ThreeBandFilter*>(handle);
+    if (f) f->setLowGain(db2lin(gainDb));
+    LOGD("LowGain %.2f dB", gainDb);
 }
 
+// -------- MID ----------
 JNIEXPORT void JNICALL
 JNI_FN(com_grupo11_equalizador, NativeThreeBand, nativeUpdateMidBandGain)
-        (JNIEnv *, jobject,jfloat gain) {
-    LOGD("MidGain %f", gain);
-
+        (JNIEnv*, jobject, jlong handle, jfloat gainDb) {
+    auto* f = reinterpret_cast<ThreeBandFilter*>(handle);
+    if (f) f->setMidGain(db2lin(gainDb));
+    LOGD("MidGain %.2f dB", gainDb);
 }
 
+// -------- HIGH ----------
 JNIEXPORT void JNICALL
 JNI_FN(com_grupo11_equalizador, NativeThreeBand, nativeUpdateHighBandGain)
-        (JNIEnv *, jobject,jfloat gain) {
-    LOGD("HighGain %f", gain);
-
+        (JNIEnv*, jobject, jlong handle, jfloat gainDb) {
+    auto* f = reinterpret_cast<ThreeBandFilter*>(handle);
+    if (f) f->setHighGain(db2lin(gainDb));
+    LOGD("HighGain %.2f dB", gainDb);
 }
 
 } // extern "C"

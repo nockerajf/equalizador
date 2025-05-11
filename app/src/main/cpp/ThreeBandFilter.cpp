@@ -13,11 +13,9 @@ void ThreeBandFilter::init(float sampleRate,
 
 float ThreeBandFilter::processSample(float x)
 {
-    // Aqui retornamos a soma das três bandas (equalizador de 3 bandas).
-    // Se quiser saídas separadas, altere esta lógica.
-    return  low_.process(x) +
-            mid_.process(x) +
-            high_.process(x);
+    return  gLow_  * low_.process(x) +
+            gMid_  * mid_.process(x) +
+            gHigh_ * high_.process(x);
 }
 
 void ThreeBandFilter::processBuffer(float* samples, size_t n)
@@ -33,3 +31,4 @@ void ThreeBandFilter::reset()
     mid_.reset();
     high_.reset();
 }
+
