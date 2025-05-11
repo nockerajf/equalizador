@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.grupo11.equalizador.service.AudioService
 import com.grupo11.equalizador.data.AudioTrack
 import com.grupo11.equalizador.ui.AudioAdapter
 
@@ -33,17 +32,15 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_UPDATE_UI = "UPDATE_UI"
         const val EXTRA_CURRENT_POS = "CURRENT_POSITION"
         const val EXTRA_DURATION    = "DURATION"
+        const val ACTION_UPDATE_LOW_GAIN = "UPDATE_LOW_GAIN"
+        const val ACTION_UPDATE_MID_GAIN = "UPDATE_MID_GAIN"
+        const val ACTION_UPDATE_HIGH_GAIN = "UPDATE_HIGH_GAIN"
+        const val EXTRA_GAIN = "GAIN"
 
-        // Load the native library
-        init {
-            System.loadLibrary("native-lib")
-        }
     }
 
-    // Declare the native methods
-    private external fun stringFromJNI(): String
-    private external fun initEngine()
-    private external fun playAudioWithEqualizer(audioPath: String)
+    // Declare the native method
+   // private external fun stringFromJNI(): String
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var playButton: Button
@@ -53,6 +50,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var textViewCurrentTime: TextView
     private lateinit var textViewTotalTime: TextView
     private lateinit var textViewSongTitle: TextView
+    private lateinit var lowPassSeekBar : SeekBar
+    private lateinit var midPassSeekBar : SeekBar
+    private lateinit var highPassSeekBar : SeekBar
     private var selectedTrackResId: Int? = null
 
     private val handler = Handler()
@@ -91,6 +91,9 @@ class MainActivity : AppCompatActivity() {
         textViewCurrentTime= findViewById(R.id.textViewCurrentTime)
         textViewTotalTime  = findViewById(R.id.textViewTotalTime)
         textViewSongTitle  = findViewById(R.id.textViewSongTitle)
+        lowPassSeekBar = findViewById(R.id.eqBand1)
+        midPassSeekBar = findViewById(R.id.eqBand3)
+        highPassSeekBar = findViewById(R.id.eqBand5)
         recyclerView.layoutManager = LinearLayoutManager(this)
         val intentFilter = IntentFilter("UPDATE_UI")
         ContextCompat.registerReceiver(this, broadcastReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED)
@@ -139,16 +142,40 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
         })
 
+        lowPassSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                sendToService(ACTION_UPDATE_LOW_GAIN, Bundle().apply {
+                    putFloat(EXTRA_GAIN, (progress/100f).toFloat())
+                })
+            }
+            override fun onStartTrackingTouch(p0: SeekBar?) {}
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {}
+        })
+        midPassSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                sendToService(ACTION_UPDATE_MID_GAIN, Bundle().apply {
+                    putFloat(EXTRA_GAIN,(progress/100f).toFloat())
+                })
+            }
+            override fun onStartTrackingTouch(p0: SeekBar?) {}
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {}
+        })
+        highPassSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                sendToService(ACTION_UPDATE_HIGH_GAIN, Bundle().apply {
+                    putFloat(EXTRA_GAIN, (progress/100f).toFloat())
+                })
+            }
+            override fun onStartTrackingTouch(p0: SeekBar?) {}
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {}
+        })
+
         // Call the native method and display the result
         val textView: TextView = findViewById(R.id.textViewSongTitle)
-        textView.text = stringFromJNI()
 
-        // Initialize OpenSL ES engine
-        initEngine()
-
-        // Play audio with equalizer
-        val audioPath = "file:///android_asset/sample.mp3" // Replace with your audio file path
-        playAudioWithEqualizer(audioPath)
     }
 
     override fun onDestroy() {
