@@ -54,11 +54,14 @@ void Biquad::setup(Type type, float Fs, float f0, float Q)
 
 float Biquad::process(float x)
 {
-    // Dif. eq.: y[n] = a0*x + a1*x[n-1] + a2*x[n-2] - b1*y[n-1] - b2*y[n-2]
-    const float y = a0 * x + a1 * z1 + a2 * z2 - b1 * z1 - b2 * z2;
+    // s1 & s2 correspondem ao estado interno (z^-1)
+    // y[n] = b0*x + s1
+    float y = a0 * x + z1;
 
-    z2 = z1;
-    z1 = y;
+    // Atualiza estados
+    z1 = a1 * x - b1 * y + z2;
+    z2 = a2 * x - b2 * y;
+
     return y;
 }
 

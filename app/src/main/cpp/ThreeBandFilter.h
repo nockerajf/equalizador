@@ -24,6 +24,8 @@ public:
     // Se preferir amostra-a-amostra
     float processSample(float x);
 
+    void setRampMs(float ms);
+
     // Reseta estados internos
     void reset();
 
@@ -32,5 +34,11 @@ private:
     float gLow_  = 1.0f;
     float gMid_  = 1.0f;
     float gHigh_ = 1.0f;
+    float gLowSmooth_  = 1.0f;
+    float gMidSmooth_  = 1.0f;
+    float gHighSmooth_ = 1.0f;
+    float sampleRate_ = 48000.f;
+    float alpha_ = 0.999f;
+
 
 };
