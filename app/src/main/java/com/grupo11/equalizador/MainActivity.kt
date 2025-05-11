@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
         })
 
-        /* ───── CONFIGURA EQUALIZADOR ───── */
+        /* ───── CONFIGURA EQUALIZADOR  ───── */
         listOf(lowSeek, midSeek, highSeek).forEach { sb ->
             sb.max      = DB_RANGE
             sb.progress = DB_OFFSET          // 0 dB
