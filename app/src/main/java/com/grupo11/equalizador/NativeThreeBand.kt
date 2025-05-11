@@ -3,80 +3,56 @@ package com.grupo11.equalizador
 class NativeThreeBand(sampleRate: Int) : AutoCloseable {
 
     /* ponteiro C++ (jlong) */
-    private var nativePtr: Long
-
-    init {
-        nativePtr = nativeCreate(sampleRate)
-        check(nativePtr != 0L) { "Falha ao criar filtro nativo" }
+    private var nativePtr: Long = nativeCreate(sampleRate).also {
+        check(it != 0L) { "Falha ao criar filtro nativo" }
     }
 
+    /* ---------------- inicialização dos filtros ---------------- */
     fun init(
         lowCut: Float = 200f,
         midCenter: Float = 1_000f,
         highCut: Float = 5_000f,
         q: Float = 0.707f
-    ) {
-        nativeInit(nativePtr, lowCut, midCenter, highCut, q)
-    }
+    ) = nativeInit(nativePtr, lowCut, midCenter, highCut, q)
 
-    /** Processa um vetor mono de amostras float PCM.  */
+    /* ---------------- processamento ---------------- */
     fun process(buffer: FloatArray) {
-        if (nativePtr != 0L && buffer.isNotEmpty())
+        if (buffer.isNotEmpty())
             nativeProcess(nativePtr, buffer, buffer.size)
     }
-    /** Atualiza o ganho do filtro de graves. */
-    fun updateLowBandGain(gain: Float) {
-        if (nativePtr != 0L)
-            nativeUpdateLowBandGain(gain)
-    }
-    /** Atualiza o ganho do filtro de médios. */
-    fun updateMidBandGain(gain: Float) {
-        if (nativePtr != 0L)
-            nativeUpdateMidBandGain(gain)
-    }
-    /** Atualiza o ganho do filtro de agudos. */
-    fun updateHighBandGain(gain: Float) {
-        if (nativePtr != 0L)
-            nativeUpdateHighBandGain(gain)
-    }
 
-    /** Libera a instância nativa (você também pode chamar close()). */
-    fun release() = close()
+    /* ---------------- ajustes de ganho em dB ---------------- */
+    fun updateLowBandGain (gainDb: Float) = nativeUpdateLowBandGain (nativePtr, gainDb)
+    fun updateMidBandGain (gainDb: Float) = nativeUpdateMidBandGain (nativePtr, gainDb)
+    fun updateHighBandGain(gainDb: Float) = nativeUpdateHighBandGain(nativePtr, gainDb)
 
-    /* AutoCloseable */
+    /* ---------------- liberação ---------------- */
     override fun close() {
         if (nativePtr != 0L) {
             nativeDestroy(nativePtr)
             nativePtr = 0
         }
     }
+    fun release() = close()
 
-    /* ---------- métodos nativos ---------- */
+    /* ---------------- métodos nativos ---------------- */
+    private external fun nativeCreate(sampleRate: Int): Long
+    private external fun nativeDestroy(handle: Long)
+
     private external fun nativeInit(
-        handle: Long,
-        low: Float,
-        mid: Float,
-        high: Float,
-        q: Float
+        handle: Long, low: Float, mid: Float, high: Float, q: Float
     )
 
     private external fun nativeProcess(
-        handle: Long,
-        buffer: FloatArray,
-        nFrames: Int
+        handle: Long, buffer: FloatArray, nFrames: Int
     )
 
-    private external fun nativeDestroy(handle: Long)
-
-    private external fun nativeCreate(sampleRate: Int): Long
-
-    private external fun nativeUpdateLowBandGain(gain: Float)
-    private external fun nativeUpdateMidBandGain(gain: Float)
-    private external fun nativeUpdateHighBandGain(gain: Float)
+    /* os três setters agora recebem HANDLE + ganho */
+    private external fun nativeUpdateLowBandGain (handle: Long, gainDb: Float)
+    private external fun nativeUpdateMidBandGain (handle: Long, gainDb: Float)
+    private external fun nativeUpdateHighBandGain(handle: Long, gainDb: Float)
 
     companion object {
-        init {                      // carrega a .so apenas uma vez
-            System.loadLibrary("threebandfilter")
-        }
+        init { System.loadLibrary("threebandfilter") }
     }
 }
