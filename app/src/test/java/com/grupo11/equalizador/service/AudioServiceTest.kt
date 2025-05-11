@@ -11,6 +11,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Handler
 import android.support.v4.media.session.MediaSessionCompat
+import com.grupo11.equalizador.AudioService
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
