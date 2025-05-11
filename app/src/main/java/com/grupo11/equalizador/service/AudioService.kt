@@ -48,21 +48,11 @@ class AudioService : Service() {
     private val handler = Handler()
     private var currentTrackResId: Int = -1
     private var trackId : Int = -1
-    private lateinit var filter: NativeThreeBand
-    private val sr = 48_000
+
 
     private val LOG_TAG = "AudioService"
 
-    var mSamples: ShortBuffer? = null // the samples to play
-    var mNumSamples: Int = 0 // number of samples to play
-    var mShouldContinue: Boolean = true // flag to control playback
-    var mAudioExtractor: MediaExtractor = MediaExtractor()
-    var codec: MediaCodec? = null
-    private val CHANNELS = 1
-    private var mBufferSize: Int = 0
-    private lateinit var audioTrack: AudioTrack
     private lateinit var player: WavResPlayer
-    private val TIMEOUT_US = 10_000L
 
     override fun onCreate() {
 
@@ -83,12 +73,7 @@ class AudioService : Service() {
         //setupAudioTrack()
         player = WavResPlayer(_context)
         //textView.text = stringFromJNI()
-        filter = NativeThreeBand(sr)
-        filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
 
-        // Exemplo de buffer de teste
-        val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sr).toFloat() }
-        filter.process(pcm)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -124,33 +109,30 @@ class AudioService : Service() {
                     currentTrackResId = trackId
                     player.play(trackId)
                 }
-
-
-
             }
             "PAUSE" -> player.pause()
             "STOP"  -> {
-
                 player.stop()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
             "SEEK"  -> {
                 val pos = intent.getIntExtra("SEEK_POSITION", 0)
-                mediaPlayer?.seekTo(pos)
             }
             "UPDATE_LOW_GAIN" -> {
                 val gain = intent.getFloatExtra("GAIN", -1f)
+                //UpdateGain is used just as an example to a kind of processing in the audio data
                 player.updateGain((gain.coerceIn(-15f, +15f) + 15f) / 30f)
-                filter.updateLowBandGain(gain)
+
+                player.updateLowBandGain(gain)
             }
             "UPDATE_MID_GAIN" -> {
                 val gain = intent.getFloatExtra("GAIN", -1f)
-                filter.updateMidBandGain(gain)
+                player.updateMidBandGain(gain)
             }
             "UPDATE_HIGH_GAIN" -> {
                 val gain = intent.getFloatExtra("GAIN", -1f)
-                filter.updateHighBandGain(gain)
+                player.updateHighBandGain(gain)
             }
             else -> Log.d("grupo 11", "Unknown action: $action")
         }

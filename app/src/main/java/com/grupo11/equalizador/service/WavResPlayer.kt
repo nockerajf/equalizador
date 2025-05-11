@@ -6,6 +6,7 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import android.util.Log
 import androidx.annotation.RawRes
+import com.grupo11.equalizador.NativeThreeBand
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -21,6 +22,18 @@ class WavResPlayer(private val context: Context) {
 
     // Gain factor for the audio stream
     private var mGain: Float = 1.0f
+
+    private lateinit var filter: NativeThreeBand
+    private val sr = 48_000
+    init {
+        filter = NativeThreeBand(sr)
+        filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
+
+        // Exemplo de buffer de teste
+        val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sr).toFloat() }
+        filter.process(pcm)
+    }
+
     /**
      * Play a WAV file stored in res/raw.
      * @param rawResId The resource ID, e.g. R.raw.my_sound
@@ -231,6 +244,16 @@ class WavResPlayer(private val context: Context) {
                 throw IllegalArgumentException("Only 8-bit or 16-bit PCM supported, got $bps bps")
             }
         }
+    }
+
+    fun updateLowBandGain(gainDb: Float) {
+        filter.updateLowBandGain(gainDb)
+    }
+    fun updateMidBandGain(gainDb: Float) {
+        filter.updateMidBandGain(gainDb)
+    }
+    fun updateHighBandGain(gainDb: Float) {
+        filter.updateHighBandGain(gainDb)
     }
 
 }
