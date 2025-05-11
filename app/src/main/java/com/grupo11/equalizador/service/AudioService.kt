@@ -7,15 +7,25 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFormat
 import android.media.AudioManager
+import android.media.AudioTrack
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import com.grupo11.equalizador.MainActivity
-import com.grupo11.equalizador.R
+import java.io.IOException
+import java.nio.ShortBuffer
+import android.os.Build
+import com.grupo11.equalizador.service.WavResPlayer
+
 
 class AudioService : Service() {
 
@@ -41,6 +51,19 @@ class AudioService : Service() {
     private lateinit var filter: NativeThreeBand
     private val sr = 48_000
 
+    private val LOG_TAG = "AudioService"
+
+    var mSamples: ShortBuffer? = null // the samples to play
+    var mNumSamples: Int = 0 // number of samples to play
+    var mShouldContinue: Boolean = true // flag to control playback
+    var mAudioExtractor: MediaExtractor = MediaExtractor()
+    var codec: MediaCodec? = null
+    private val CHANNELS = 1
+    private var mBufferSize: Int = 0
+    private lateinit var audioTrack: AudioTrack
+    private lateinit var player: WavResPlayer
+    private val TIMEOUT_US = 10_000L
+
     override fun onCreate() {
 
         super.onCreate()
@@ -57,6 +80,8 @@ class AudioService : Service() {
         // Start updating UI using handler
         updateSeekBarProgress()
 
+        //setupAudioTrack()
+        player = WavResPlayer(_context)
         //textView.text = stringFromJNI()
         filter = NativeThreeBand(sr)
         filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
@@ -97,19 +122,16 @@ class AudioService : Service() {
                 if (trackId != -1 && trackId != currentTrackResId) {
                     // troca de música
                     currentTrackResId = trackId
-                    mediaPlayer?.reset()
-                    val afd = _context.resources.openRawResourceFd(trackId)
-                    mediaPlayer?.setDataSource(
-                        afd.fileDescriptor, afd.startOffset, afd.length
-                    )
-                    mediaPlayer?.prepare()
+                    player.play(trackId)
                 }
-                mediaPlayer?.start()
+
+
+
             }
-            "PAUSE" -> mediaPlayer?.pause()
+            "PAUSE" -> player.pause()
             "STOP"  -> {
 
-                mediaPlayer?.stop()
+                player.stop()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -119,6 +141,7 @@ class AudioService : Service() {
             }
             "UPDATE_LOW_GAIN" -> {
                 val gain = intent.getFloatExtra("GAIN", -1f)
+                player.updateGain((gain.coerceIn(-15f, +15f) + 15f) / 30f)
                 filter.updateLowBandGain(gain)
             }
             "UPDATE_MID_GAIN" -> {
@@ -203,7 +226,6 @@ class AudioService : Service() {
                 Log.d("grupo 11", "Notification created")
             }
     }
-
 
 
     companion object {
