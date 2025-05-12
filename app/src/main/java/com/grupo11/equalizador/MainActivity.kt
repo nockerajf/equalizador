@@ -35,8 +35,6 @@ import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_MAIN_ACTIVITY
 
 
 class MainActivity : AppCompatActivity() {
-
-    /* ───────────────── VIEW refs ───────────────── */
     private lateinit var recyclerView: RecyclerView
     private lateinit var playButton: Button
     private lateinit var pauseButton: Button
@@ -48,13 +46,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var lowSeek: SeekBar
     private lateinit var midSeek: SeekBar
     private lateinit var highSeek: SeekBar
-
-    /* ───────────────── VARS ───────────────── */
     private var selectedTrackResId: Int? = null
     private val handler   = Handler()
     private var currentPosition = 0
-
-    /* ───────────────── BROADCAST ───────────────── */
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             Log.i(LOG_TAG_MAIN_ACTIVITY, "broadcastReceiver onReceive() called with: intent = $intent")
@@ -82,7 +76,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
     /* ───────────────── LIFECYCLE ───────────────── */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,13 +92,11 @@ class MainActivity : AppCompatActivity() {
             sendToService(ACTION_PLAY, Bundle().apply { putInt(EXTRA_TRACK, track.resId) })
             Toast.makeText(this, "Tocando: ${track.title}", Toast.LENGTH_SHORT).show()
         }
-
         /* Register receiver */
         ContextCompat.registerReceiver(
             this, broadcastReceiver, IntentFilter(ACTION_UPDATE_UI),
             ContextCompat.RECEIVER_EXPORTED
         )
-
         /* botões */
         playButton.setOnClickListener  {
             selectedTrackResId?.let {
@@ -123,19 +114,6 @@ class MainActivity : AppCompatActivity() {
             sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, 0) })
             seekBarProgress.progress = 0
         }
-
-        /* seek global (posição da música) */
-//        seekBarProgress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-//            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-//                if (fromUser) {
-//                    currentPosition = progress
-//                    sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, progress) })
-//                }
-//            }
-//            override fun onStartTrackingTouch(sb: SeekBar?) { handler.removeCallbacksAndMessages(null) }
-//            override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
-//        })
-
         /* ───── CONFIGURA EQUALIZADOR ───── */
         listOf(lowSeek, midSeek, highSeek).forEach { sb ->
             sb.max      = DB_RANGE
@@ -189,15 +167,6 @@ class MainActivity : AppCompatActivity() {
         Log.i(LOG_TAG_MAIN_ACTIVITY, "sendGainToService() called with: action = $action, gainDb = $gainDb")
         sendToService(action, Bundle().apply { putFloat(EXTRA_GAIN, gainDb.toFloat()) })
     }
-
-//    private fun startAutoUpdate() {
-//        handler.postDelayed(object : Runnable {
-//            override fun run() {
-//                seekBarProgress.progress = currentPosition
-//                handler.postDelayed(this, 1000)
-//            }
-//        }, 1000)
-//    }
 
     private fun sendToService(action: String, extras: Bundle?) {
         Log.i(LOG_TAG_MAIN_ACTIVITY, "sendToService() called with: action = $action, extras = $extras")

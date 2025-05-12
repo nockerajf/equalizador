@@ -16,12 +16,9 @@ import java.nio.ByteOrder
 class WavResPlayer(private val context: Context) {
 
     private var track: AudioTrack? = null
-    // Thread that does the actual streaming
     private var worker: Thread? = null
-    // Volatile flag to tell the worker to stop streaming
     @Volatile private var shouldStop = false
 
-    // Gain factor for the audio stream
     private var mGain: Float = 1.0f
     private val sampleRate = 48_000
     private var filter: NativeThreeBand = NativeThreeBand(sampleRate)
@@ -33,7 +30,7 @@ class WavResPlayer(private val context: Context) {
     init {
         filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
 
-        // Exemplo de buffer de teste
+        // Buffer
         val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sampleRate).toFloat() }
         filter.process(pcm)
     }
@@ -117,7 +114,7 @@ class WavResPlayer(private val context: Context) {
 
                         val floatBuffer = FloatArray(numSamples)
 
-// 1. Converter ByteArray (PCM) para FloatArray
+                        // 1. Converter ByteArray (PCM) para FloatArray
                         if (header.bitsPerSample == 16) {
                             Log.d(LOG_TAG_WAV_RES_PLAYER, "Converting 16-bit PCM to FloatArray") // Log 3: Início da conversão 16-bit
                             val byteBuffer = ByteBuffer.wrap(buffer, 0, read)
@@ -141,15 +138,11 @@ class WavResPlayer(private val context: Context) {
 
                         } else {
                             Log.e(LOG_TAG_WAV_RES_PLAYER, "Unsupported bit depth for native processing: ${header.bitsPerSample}") // Log 5: Formato não suportado
-                            // Se o formato não for suportado e você decidiu pular, logar isso.
-                            // Por enquanto, o código atual lança exceção. Se você mudar para pular:
-                            // track!!.write(buffer, 0, read)
-                            // continue // Pula para a próxima iteração do loop
                             throw IOException("Unsupported bit depth for native processing: ${header.bitsPerSample}") // Manter a exceção se a lógica for essa
                         }
 
 
-// 2. Processar o buffer de floats com o equalizador C++
+                        // 2. Processar o buffer de floats com o equalizador C++
                         Log.d(LOG_TAG_WAV_RES_PLAYER, "Calling native filter process()") // Log 6: Antes de chamar o C++
                         filter.process(floatBuffer) // Assumindo que 'process' modifica 'floatBuffer' in-place
                         Log.d(LOG_TAG_WAV_RES_PLAYER, "Native filter process() returned") // Log 7: Depois de chamar o C++
@@ -161,7 +154,7 @@ class WavResPlayer(private val context: Context) {
                         }
 
 
-// 3. Converter FloatArray processado de volta para ByteArray (PCM)
+                        // 3. Converter FloatArray processado de volta para ByteArray (PCM)
                         if (header.bitsPerSample == 16) {
                             Log.d(LOG_TAG_WAV_RES_PLAYER, "Converting FloatArray back to 16-bit PCM ByteArray") // Log 9: Início da conversão de volta
                             val byteBuffer = ByteBuffer.wrap(buffer, 0, numSamples * 2)
