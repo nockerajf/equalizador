@@ -1,7 +1,11 @@
 #pragma once
 #include "Biquad.h"
 #include <cstddef>
-
+#define LOG_TAG "ThreeBandFilter" // Replace with a relevant tag
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 /*
  * ThreeBandFilter – empacota três Biquads
  * low-pass, band-pass (centro), high-pass.

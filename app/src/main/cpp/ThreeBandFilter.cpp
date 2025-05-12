@@ -1,6 +1,6 @@
 #include <math.h>
 #include "ThreeBandFilter.h"
-
+#include <android/log.h>
 void ThreeBandFilter::init(float sampleRate,
                            float lowCut,
                            float midCenter,
@@ -27,15 +27,43 @@ void ThreeBandFilter::init(float sampleRate,
 
 float ThreeBandFilter::processSample(float x)
 {
-    // 1º: atualiza os ganhos suavizados (filtro exponencial de 1ª ordem)
+    // 1º: atualiza os ganhos suavizados
     gLowSmooth_  = alpha_ * gLowSmooth_  + (1.0f - alpha_) * gLow_;
     gMidSmooth_  = alpha_ * gMidSmooth_  + (1.0f - alpha_) * gMid_;
     gHighSmooth_ = alpha_ * gHighSmooth_ + (1.0f - alpha_) * gHigh_;
 
+    LOGD("processSample: Input x=%.6f", x);
+    LOGD("processSample: Smooth Gains - Low=%.6f, Mid=%.6f, High=%.6f", gLowSmooth_, gMidSmooth_, gHighSmooth_);
+
     // 2º: aplica aos três biquads e soma
-    return  gLowSmooth_  * low_.process(x) +
-            gMidSmooth_  * mid_.process(x) +
-            gHighSmooth_ * high_.process(x);
+    float lowOut = low_.process(x);
+    float midOut = mid_.process(x);
+    float highOut = high_.process(x);
+
+    LOGD("processSample: Biquad Outputs - Low=%.6f, Mid=%.6f, High=%.6f", lowOut, midOut, highOut);
+
+    // Add checks here!
+    if (isnan(lowOut) || isinf(lowOut) || // Removido 'std::'
+        isnan(midOut) || isinf(midOut) || // Removido 'std::'
+        isnan(highOut) || isinf(highOut)) { // Removido 'std::'
+        LOGE("processSample: DETECTED NaN or INF in Biquad output!");
+        // You found the source! Now need to debug Biquad::process
+    }
+
+
+    float result = gLowSmooth_  * lowOut +
+                   gMidSmooth_  * midOut +
+                   gHighSmooth_ * highOut;
+
+    LOGD("processSample: Final Result = %.6f", result);
+
+    if (isnan(result) || isinf(result)) { // Removido 'std::'
+        LOGE("processSample: DETECTED NaN or INF in final result!");
+        // This should match the NaN seen in Kotlin
+    }
+
+
+    return result;
 }
 void ThreeBandFilter::setRampMs(float ms)
 {
