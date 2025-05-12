@@ -97,15 +97,105 @@ class WavResPlayer(private val context: Context) {
                     track!!.play()
 
                     // Stream the PCM payload
-                    val buffer = ByteArray(minBufSize)
+                    val buffer = ByteArray(minBufSize )
                     while (!shouldStop) {
+                        val startTime = System.currentTimeMillis() // Marca o início
+
                         val read = input.read(buffer)
+                        Log.d("WavResPlayer", "Read $read bytes from input stream")
                         if (read <= 0) break
 
-                        // attenuate in-place:
-                        applyGain(buffer, read, header.bitsPerSample, mGain)
+                        val bytesPerSample = header.bitsPerSample / 8
+                        val numSamples = read / bytesPerSample
+                        Log.d("WavResPlayer", "Calculated numSamples: $numSamples (Bytes read: $read, Bytes per sample: $bytesPerSample)") // Log 2: Cálculo do número de samples
 
-                        track!!.write(buffer, 0, read)
+                        val floatBuffer = FloatArray(numSamples)
+
+// 1. Converter ByteArray (PCM) para FloatArray
+                        if (header.bitsPerSample == 16) {
+                            Log.d("WavResPlayer", "Converting 16-bit PCM to FloatArray") // Log 3: Início da conversão 16-bit
+                            val byteBuffer = ByteBuffer.wrap(buffer, 0, read)
+                            byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+
+                            var floatIdx = 0
+                            while (byteBuffer.remaining() >= 2 && floatIdx < numSamples) {
+                                val sample = byteBuffer.getShort()
+                                floatBuffer[floatIdx] = sample.toFloat() / Short.MAX_VALUE.toFloat()
+                                floatIdx += 1
+                            }
+                            if (floatIdx != numSamples) {
+                                Log.e("WavResPlayer", "Mismatch during 16-bit conversion: Expected $numSamples floats, got $floatIdx") // Log 4: Verificação de consistência na conversão
+                            }
+                            // Opcional: logar alguns valores do floatBuffer convertido
+                            if (numSamples > 0) {
+                                Log.d("WavResPlayer", "First float sample: ${floatBuffer[0]}")
+                                if (numSamples > 100) Log.d("WavResPlayer", "100th float sample: ${floatBuffer[99]}")
+                                Log.d("WavResPlayer", "Last float sample: ${floatBuffer[numSamples - 1]}")
+                            }
+
+                        } else {
+                            Log.e("WavResPlayer", "Unsupported bit depth for native processing: ${header.bitsPerSample}") // Log 5: Formato não suportado
+                            // Se o formato não for suportado e você decidiu pular, logar isso.
+                            // Por enquanto, o código atual lança exceção. Se você mudar para pular:
+                            // track!!.write(buffer, 0, read)
+                            // continue // Pula para a próxima iteração do loop
+                            throw IOException("Unsupported bit depth for native processing: ${header.bitsPerSample}") // Manter a exceção se a lógica for essa
+                        }
+
+
+// 2. Processar o buffer de floats com o equalizador C++
+                        Log.d("WavResPlayer", "Calling native filter process()") // Log 6: Antes de chamar o C++
+                        if (::filter.isInitialized) {
+                            filter.process(floatBuffer) // Assumindo que 'process' modifica 'floatBuffer' in-place
+                            Log.d("WavResPlayer", "Native filter process() returned") // Log 7: Depois de chamar o C++
+                            // Opcional: logar alguns valores do floatBuffer APÓS o processamento
+                            if (numSamples > 0) {
+                                Log.d("WavResPlayer", "First float sample after process: ${floatBuffer[0]}")
+                                if (numSamples > 100) Log.d("WavResPlayer", "100th float sample after process: ${floatBuffer[99]}")
+                                Log.d("WavResPlayer", "Last float sample after process: ${floatBuffer[numSamples - 1]}")
+                            }
+                        } else {
+                            Log.e("WavResPlayer", "Native filter not initialized! Skipping native processing.") // Log 8: Filtro não inicializado
+                            // Se o filtro não estiver inicializado, o floatBuffer não foi modificado.
+                        }
+
+
+// 3. Converter FloatArray processado de volta para ByteArray (PCM)
+                        if (header.bitsPerSample == 16) {
+                            Log.d("WavResPlayer", "Converting FloatArray back to 16-bit PCM ByteArray") // Log 9: Início da conversão de volta
+                            val byteBuffer = ByteBuffer.wrap(buffer, 0, numSamples * 2)
+                            byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+
+                            var floatIdx = 0
+                            while (floatIdx < numSamples) {
+                                val scaledSample = (floatBuffer[floatIdx] * Short.MAX_VALUE.toFloat()).toInt()
+                                val finalSample = scaledSample.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())
+                                byteBuffer.putShort(finalSample.toShort())
+                                floatIdx += 1
+                            }
+                            // Opcional: logar alguns valores do buffer convertido de volta
+                            if (read > 1) { // Precisa de pelo menos 2 bytes para 1 sample de 16-bit
+                                Log.d("WavResPlayer", "First byte after conversion back: ${buffer[0]}, Second byte: ${buffer[1]}")
+                                if (read > 200) Log.d("WavResPlayer", "Bytes 200/201 after conversion back: ${buffer[199]}, ${buffer[200]}")
+                                Log.d("WavResPlayer", "Last byte after conversion back: ${buffer[read - 1]}")
+                            }
+
+                        } else {
+                            // Lógica de conversão de volta para outros formatos, se houver.
+                            // Se você pulou o processamento nativo (Log 5 ou Log 8), você pode querer escrever o buffer original aqui.
+                            Log.d("WavResPlayer", "Skipping conversion back for unsupported bit depth or uninitialized filter.")
+                        }
+
+                        val written = track!!.write(buffer, 0, read)
+                        Log.d("WavResPlayer", "Wrote $written bytes to AudioTrack (Expected $read)")
+
+                        val endTime = System.currentTimeMillis() // Marca o fim
+                        val duration = endTime - startTime
+                        Log.d("WavResPlayer", "Buffer processing took $duration ms") // Loga a duração
+
+                        if (written < read) {
+                            Log.w("WavResPlayer", "AudioTrack write warning: Wrote $written bytes, expected $read")
+                        }
                     }
 
                     // Done

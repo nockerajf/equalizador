@@ -1,7 +1,11 @@
 #pragma once
 #include "Biquad.h"
 #include <cstddef>
-
+#define LOG_TAG "ThreeBandFilter" // Replace with a relevant tag
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 /*
  * ThreeBandFilter – empacota três Biquads
  * low-pass, band-pass (centro), high-pass.
@@ -24,6 +28,8 @@ public:
     // Se preferir amostra-a-amostra
     float processSample(float x);
 
+    void setRampMs(float ms);
+
     // Reseta estados internos
     void reset();
 
@@ -32,5 +38,11 @@ private:
     float gLow_  = 1.0f;
     float gMid_  = 1.0f;
     float gHigh_ = 1.0f;
+    float gLowSmooth_  = 1.0f;
+    float gMidSmooth_  = 1.0f;
+    float gHighSmooth_ = 1.0f;
+    float sampleRate_ = 48000.f;
+    float alpha_ = 0.999f;
+
 
 };
