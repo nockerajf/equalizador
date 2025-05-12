@@ -66,7 +66,7 @@ void Biquad::setup(Type type, float Fs, float f0, float Q)
 
     // Normalize by standard a0
     if (a0_std == 0.0f) {
-        LOGE("Biquad::setup: Critical error: a0_std is zero! f0=%f, Q=%f, Fs=%f", f0, Q, Fs);
+        //LOGE("Biquad::setup: Critical error: a0_std is zero! f0=%f, Q=%f, Fs=%f", f0, Q, Fs);
         // Handle this error appropriately - set to passthrough
         a0 = 1.0f; a1 = 0.0f; a2 = 0.0f;
         b1 = 0.0f; b2 = 0.0f;
@@ -83,20 +83,20 @@ void Biquad::setup(Type type, float Fs, float f0, float Q)
         b1 = a1_std * invA0_std; // Your a1
         b2 = a2_std * invA0_std; // Your a2
 
-        LOGD("Biquad::setup: Type=%d, Fs=%.1f, f0=%.1f, Q=%.3f", type, Fs, f0, Q);
-        LOGD("Biquad::setup: w0=%.4f, cosw0=%.4f, sinw0=%.4f, alpha=%.4f", w0, cosw0, sinw0, alpha);
-        LOGD("Biquad::setup: Coeffs (standard) - b0=%.4f, b1=%.4f, b2=%.4f, a0=%.4f, a1=%.4f, a2=%.4f",
+        //LOGD("Biquad::setup: Type=%d, Fs=%.1f, f0=%.1f, Q=%.3f", type, Fs, f0, Q);
+        //LOGD("Biquad::setup: w0=%.4f, cosw0=%.4f, sinw0=%.4f, alpha=%.4f", w0, cosw0, sinw0, alpha);
+        //LOGD("Biquad::setup: Coeffs (standard) - b0=%.4f, b1=%.4f, b2=%.4f, a0=%.4f, a1=%.4f, a2=%.4f",
              b0_std, b1_std, b2_std, a0_std, a1_std, a2_std);
 
         // Log final coefficients (using your member variable names)
-        LOGD("Biquad::setup: Final Coeffs - a0=%.6f, a1=%.6f, a2=%.6f, b1=%.6f, b2=%.6f",
+       // LOGD("Biquad::setup: Final Coeffs - a0=%.6f, a1=%.6f, a2=%.6f, b1=%.6f, b2=%.6f",
              this->a0, this->a1, this->a2, this->b1, this->b2);
 
         // Add NaN/Inf checks for final coefficients
         if (isnan(this->a0) || isinf(this->a0) || isnan(this->a1) || isinf(this->a1) ||
             isnan(this->a2) || isinf(this->a2) || isnan(this->b1) || isinf(this->b1) ||
             isnan(this->b2) || isinf(this->b2)) {
-            LOGE("Biquad::setup: DETECTED NaN or INF in final coefficients!");
+            // LOGE("Biquad::setup: DETECTED NaN or INF in final coefficients!");
             // This is a critical error and explains NaNs in process.
             // Could reset coefficients here as well.
         }
