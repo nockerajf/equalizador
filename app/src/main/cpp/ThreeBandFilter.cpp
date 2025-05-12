@@ -40,13 +40,13 @@ float ThreeBandFilter::processSample(float x)
     float midOut = mid_.process(x);
     float highOut = high_.process(x);
 
-    LOGD("processSample: Biquad Outputs - Low=%.6f, Mid=%.6f, High=%.6f", lowOut, midOut, highOut);
+    //LOGD("processSample: Biquad Outputs - Low=%.6f, Mid=%.6f, High=%.6f", lowOut, midOut, highOut);
 
     // Add checks here!
     if (isnan(lowOut) || isinf(lowOut) || // Removido 'std::'
         isnan(midOut) || isinf(midOut) || // Removido 'std::'
         isnan(highOut) || isinf(highOut)) { // Removido 'std::'
-        LOGE("processSample: DETECTED NaN or INF in Biquad output!");
+        //LOGE("processSample: DETECTED NaN or INF in Biquad output!");
         // You found the source! Now need to debug Biquad::process
     }
 
@@ -55,10 +55,10 @@ float ThreeBandFilter::processSample(float x)
                    gMidSmooth_  * midOut +
                    gHighSmooth_ * highOut;
 
-    LOGD("processSample: Final Result = %.6f", result);
+    //LOGD("processSample: Final Result = %.6f", result);
 
     if (isnan(result) || isinf(result)) { // Removido 'std::'
-        LOGE("processSample: DETECTED NaN or INF in final result!");
+        //LOGE("processSample: DETECTED NaN or INF in final result!");
         // This should match the NaN seen in Kotlin
     }
 
