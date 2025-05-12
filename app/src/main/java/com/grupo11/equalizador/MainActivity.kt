@@ -15,32 +15,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.grupo11.equalizador.data.AudioTrack
 import com.grupo11.equalizador.ui.AudioAdapter
-import kotlin.math.pow
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_UI
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_HIGH_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_CURRENT_POS
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_DURATION
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_TRACK
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.DB_RANGE
+import com.grupo11.equalizador.utils.EqualizerConstants.DB_OFFSET
+
 
 class MainActivity : AppCompatActivity() {
-
-    /* ───────────────── CONSTANTES ───────────────── */
-    companion object {
-        const val ACTION_PLAY            = "PLAY"
-        const val ACTION_PAUSE           = "PAUSE"
-        const val ACTION_STOP            = "STOP"
-        const val ACTION_SEEK            = "SEEK"
-        const val EXTRA_TRACK            = "TRACK_RES_ID"
-        const val EXTRA_POSITION         = "SEEK_POSITION"
-
-        const val ACTION_UPDATE_UI       = "UPDATE_UI"
-        const val EXTRA_CURRENT_POS      = "CURRENT_POSITION"
-        const val EXTRA_DURATION         = "DURATION"
-
-        const val ACTION_UPDATE_LOW_GAIN  = "UPDATE_LOW_GAIN"
-        const val ACTION_UPDATE_MID_GAIN  = "UPDATE_MID_GAIN"
-        const val ACTION_UPDATE_HIGH_GAIN = "UPDATE_HIGH_GAIN"
-        const val EXTRA_GAIN             = "GAIN"
-
-        /* faixa −15 dB … +15 dB  */
-        private const val DB_RANGE  = 30     // 0-30
-        private const val DB_OFFSET = 15     // progress 15 = 0 dB
-    }
 
     /* ───────────────── VIEW refs ───────────────── */
     private lateinit var recyclerView: RecyclerView
@@ -81,18 +73,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        /* views */
-        recyclerView        = findViewById(R.id.audioTrackRecyclerView)
-        playButton          = findViewById(R.id.button_play)
-        pauseButton         = findViewById(R.id.button_pause)
-        stopButton          = findViewById(R.id.button_stop)
-        seekBarProgress     = findViewById(R.id.seekBarProgress)
-        textViewCurrentTime = findViewById(R.id.textViewCurrentTime)
-        textViewTotalTime   = findViewById(R.id.textViewTotalTime)
-        textViewSongTitle   = findViewById(R.id.textViewSongTitle)
-        lowSeek   = findViewById(R.id.eqBand1)
-        midSeek   = findViewById(R.id.eqBand3)
-        highSeek  = findViewById(R.id.eqBand5)
+        initViews()
 
         /* Recycler */
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -143,6 +124,20 @@ class MainActivity : AppCompatActivity() {
         lowSeek.setOnSeekBarChangeListener(simpleBandListener(ACTION_UPDATE_LOW_GAIN))
         midSeek.setOnSeekBarChangeListener(simpleBandListener(ACTION_UPDATE_MID_GAIN))
         highSeek.setOnSeekBarChangeListener(simpleBandListener(ACTION_UPDATE_HIGH_GAIN))
+    }
+
+    private fun initViews(){
+        recyclerView        = findViewById(R.id.audioTrackRecyclerView)
+        playButton          = findViewById(R.id.button_play)
+        pauseButton         = findViewById(R.id.button_pause)
+        stopButton          = findViewById(R.id.button_stop)
+        seekBarProgress     = findViewById(R.id.seekBarProgress)
+        textViewCurrentTime = findViewById(R.id.textViewCurrentTime)
+        textViewTotalTime   = findViewById(R.id.textViewTotalTime)
+        textViewSongTitle   = findViewById(R.id.textViewSongTitle)
+        lowSeek   = findViewById(R.id.eqBand1)
+        midSeek   = findViewById(R.id.eqBand3)
+        highSeek  = findViewById(R.id.eqBand5)
     }
 
     override fun onDestroy() {

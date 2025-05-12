@@ -14,6 +14,8 @@ import java.nio.ByteOrder
 
 class WavResPlayer(private val context: Context) {
 
+    private val LOG_TAG = "WavResPlayer"
+
     private var track: AudioTrack? = null
     // Thread that does the actual streaming
     private var worker: Thread? = null
