@@ -15,26 +15,32 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.grupo11.equalizador.data.AudioTrack
 import com.grupo11.equalizador.ui.AudioAdapter
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_UI
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_HIGH_GAIN
-import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_CURRENT_POS
-import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_DURATION
-import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_TRACK
-import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
-import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
-import com.grupo11.equalizador.utils.EqualizerConstants.DB_RANGE
-import com.grupo11.equalizador.utils.EqualizerConstants.DB_OFFSET
-import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_UI_PLAYING_STATE
-import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_MAIN_ACTIVITY
-
+import kotlin.math.pow
 
 class MainActivity : AppCompatActivity() {
+
+    /* ───────────────── CONSTANTES ───────────────── */
+    companion object {
+        const val ACTION_PLAY            = "PLAY"
+        const val ACTION_PAUSE           = "PAUSE"
+        const val ACTION_STOP            = "STOP"
+        const val ACTION_SEEK            = "SEEK"
+        const val EXTRA_TRACK            = "TRACK_RES_ID"
+        const val EXTRA_POSITION         = "SEEK_POSITION"
+
+        const val ACTION_UPDATE_UI       = "UPDATE_UI"
+        const val EXTRA_CURRENT_POS      = "CURRENT_POSITION"
+        const val EXTRA_DURATION         = "DURATION"
+
+        const val ACTION_UPDATE_LOW_GAIN  = "UPDATE_LOW_GAIN"
+        const val ACTION_UPDATE_MID_GAIN  = "UPDATE_MID_GAIN"
+        const val ACTION_UPDATE_HIGH_GAIN = "UPDATE_HIGH_GAIN"
+        const val EXTRA_GAIN             = "GAIN"
+
+        /* faixa −15 dB … +15 dB  */
+        private const val DB_RANGE  = 30     // 0-30
+        private const val DB_OFFSET = 15     // progress 15 = 0 dB
+    }
 
     /* ───────────────── VIEW refs ───────────────── */
     private lateinit var recyclerView: RecyclerView
@@ -57,28 +63,15 @@ class MainActivity : AppCompatActivity() {
     /* ───────────────── BROADCAST ───────────────── */
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            Log.i(LOG_TAG_MAIN_ACTIVITY, "broadcastReceiver onReceive() called with: intent = $intent")
             if (intent?.action == ACTION_UPDATE_UI) {
-                Log.i(LOG_TAG_MAIN_ACTIVITY, "ACTION_UPDATE_UI received")
                 val pos = intent.getIntExtra(EXTRA_CURRENT_POS, 0)
                 val dur = intent.getIntExtra(EXTRA_DURATION, 0)
-                val uiState = intent.getBooleanExtra(EXTRA_UI_PLAYING_STATE,false)
-                Log.i(LOG_TAG_MAIN_ACTIVITY, "uiState: $uiState")
-                if (uiState) {
-                    playButton.isEnabled = false
-                    stopButton.isEnabled = true
-                    pauseButton.isEnabled = true
-                } else {
-                    playButton.isEnabled = true
-                    stopButton.isEnabled = false
-                    pauseButton.isEnabled = false
-                }
-                Log.i(LOG_TAG_MAIN_ACTIVITY, "pos: $pos, dur: $dur")
                 if (dur > 0) {
                     seekBarProgress.max      = dur
                     seekBarProgress.progress = pos
-                    textViewCurrentTime.text = formatMs(pos * 1000)
-                    textViewTotalTime.text   = formatMs(dur * 1000)                }
+                    textViewCurrentTime.text = formatMs(pos)
+                    textViewTotalTime.text   = formatMs(dur)
+                }
             }
         }
     }
@@ -87,9 +80,19 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "onCreate() called")
 
-        initViews()
+        /* views */
+        recyclerView        = findViewById(R.id.audioTrackRecyclerView)
+        playButton          = findViewById(R.id.button_play)
+        pauseButton         = findViewById(R.id.button_pause)
+        stopButton          = findViewById(R.id.button_stop)
+        seekBarProgress     = findViewById(R.id.seekBarProgress)
+        textViewCurrentTime = findViewById(R.id.textViewCurrentTime)
+        textViewTotalTime   = findViewById(R.id.textViewTotalTime)
+        textViewSongTitle   = findViewById(R.id.textViewSongTitle)
+        lowSeek   = findViewById(R.id.eqBand1)
+        midSeek   = findViewById(R.id.eqBand3)
+        highSeek  = findViewById(R.id.eqBand5)
 
         /* Recycler */
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -109,16 +112,11 @@ class MainActivity : AppCompatActivity() {
         /* botões */
         playButton.setOnClickListener  {
             selectedTrackResId?.let {
-                Log.i(LOG_TAG_MAIN_ACTIVITY, "Play button clicked")
                 sendToService(ACTION_PLAY,  Bundle().apply { putInt(EXTRA_TRACK, it) })
             } ?: Toast.makeText(this, "Selecione uma faixa", Toast.LENGTH_SHORT).show()
         }
-        pauseButton.setOnClickListener {
-            Log.i(LOG_TAG_MAIN_ACTIVITY, "Pause button clicked")
-            sendToService(ACTION_PAUSE, null)
-        }
+        pauseButton.setOnClickListener { sendToService(ACTION_PAUSE, null) }
         stopButton.setOnClickListener  {
-            Log.i(LOG_TAG_MAIN_ACTIVITY, "Stop button clicked")
             sendToService(ACTION_STOP, null)
             sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, 0) })
             seekBarProgress.progress = 0
@@ -147,26 +145,7 @@ class MainActivity : AppCompatActivity() {
         highSeek.setOnSeekBarChangeListener(simpleBandListener(ACTION_UPDATE_HIGH_GAIN))
     }
 
-    private fun initViews(){
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "initViews() called")
-        recyclerView        = findViewById(R.id.audioTrackRecyclerView)
-        playButton          = findViewById(R.id.button_play)
-        pauseButton         = findViewById(R.id.button_pause)
-        stopButton          = findViewById(R.id.button_stop)
-        seekBarProgress     = findViewById(R.id.seekBarProgress)
-        textViewCurrentTime = findViewById(R.id.textViewCurrentTime)
-        textViewTotalTime   = findViewById(R.id.textViewTotalTime)
-        textViewSongTitle   = findViewById(R.id.textViewSongTitle)
-        lowSeek   = findViewById(R.id.eqBand1)
-        midSeek   = findViewById(R.id.eqBand3)
-        highSeek  = findViewById(R.id.eqBand5)
-        playButton.isEnabled = true
-        stopButton.isEnabled = false
-        pauseButton.isEnabled = false
-    }
-
     override fun onDestroy() {
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "onDestroy() called")
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
         handler.removeCallbacksAndMessages(null)
@@ -186,7 +165,6 @@ class MainActivity : AppCompatActivity() {
     private fun sendGainToService(action: String, gainDb: Int) {
         // Se o serviço quer fator linear, converta:
         // val linear = 10f.pow(gainDb / 20f)
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "sendGainToService() called with: action = $action, gainDb = $gainDb")
         sendToService(action, Bundle().apply { putFloat(EXTRA_GAIN, gainDb.toFloat()) })
     }
 
@@ -200,7 +178,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendToService(action: String, extras: Bundle?) {
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "sendToService() called with: action = $action, extras = $extras")
         Intent(this, AudioService::class.java).also { intent ->
             intent.action = action
             extras?.let { intent.putExtras(it) }
@@ -209,10 +186,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun formatMs(ms: Int): String {
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "formatMs() called with: ms = $ms")
         val s = (ms / 1000) % 60
         val m = (ms / 1000) / 60
-        Log.i(LOG_TAG_MAIN_ACTIVITY, "formatMs() returning: %d:%02d".format(m, s))
         return "%d:%02d".format(m, s)
     }
 
