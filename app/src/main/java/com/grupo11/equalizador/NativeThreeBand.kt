@@ -34,19 +34,15 @@ class NativeThreeBand(sampleRate: Int) : AutoCloseable {
         }
     }
     fun release() = close()
-
     /* ---------------- métodos nativos ---------------- */
     private external fun nativeCreate(sampleRate: Int): Long
     private external fun nativeDestroy(handle: Long)
-
     private external fun nativeInit(
         handle: Long, low: Float, mid: Float, high: Float, q: Float
     )
-
     private external fun nativeProcess(
         handle: Long, buffer: FloatArray, nFrames: Int
     )
-
     /* os três setters agora recebem HANDLE + ganho */
     private external fun nativeUpdateLowBandGain (handle: Long, gainDb: Float)
     private external fun nativeUpdateMidBandGain (handle: Long, gainDb: Float)
