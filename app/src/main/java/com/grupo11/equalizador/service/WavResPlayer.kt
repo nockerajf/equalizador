@@ -97,7 +97,7 @@ class WavResPlayer(private val context: Context) {
                     track!!.play()
 
                     // Stream the PCM payload
-                    val buffer = ByteArray(minBufSize *4)
+                    val buffer = ByteArray(minBufSize )
                     while (!shouldStop) {
                         val startTime = System.currentTimeMillis() // Marca o início
 
