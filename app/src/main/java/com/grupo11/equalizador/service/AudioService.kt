@@ -7,24 +7,34 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.AudioFormat
 import android.media.AudioManager
-import android.media.AudioTrack
-import android.media.MediaCodec
-import android.media.MediaExtractor
-import android.media.MediaFormat
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import java.io.IOException
-import java.nio.ShortBuffer
-import android.os.Build
 import com.grupo11.equalizador.service.WavResPlayer
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_HIGH_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_UI
+import com.grupo11.equalizador.utils.EqualizerConstants.CHANNEL_ID
+import com.grupo11.equalizador.utils.EqualizerConstants.DEFAULT_TRACK_ID
+import com.grupo11.equalizador.utils.EqualizerConstants.DEFAULT_TRACK_RESOURCE_ID
+import com.grupo11.equalizador.utils.EqualizerConstants.DEFAULT_NOTIFICATION_ID
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_CURRENT_POS
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_DURATION
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_TRACK
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_UI_PLAYING_STATE
+import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_AUDIO_SERVICE
+import com.grupo11.equalizador.utils.EqualizerConstants.NOTIFICATION_CHANNEL_NAME
 
 
 class AudioService : Service() {
@@ -44,20 +54,17 @@ class AudioService : Service() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var _context: Context = this
 
-    private val notificationId = 1
+    private val notificationId = DEFAULT_NOTIFICATION_ID
     private val handler = Handler()
-    private var currentTrackResId: Int = -1
-    private var trackId : Int = -1
-
-
-    private val LOG_TAG = "AudioService"
+    private var currentTrackResId: Int = DEFAULT_TRACK_RESOURCE_ID
+    private var trackId : Int = DEFAULT_TRACK_ID
 
     private lateinit var player: WavResPlayer
 
     override fun onCreate() {
 
         super.onCreate()
-        Log.d("grupo 11", "Service onCreate() called")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Service onCreate() called")
 
         createMediaPlayerInstance()
         createAudioManager()
@@ -65,15 +72,13 @@ class AudioService : Service() {
 
         createNotificationChannel()
         startForeground(notificationId, createNotification())
-        Log.d("grupo 11", "Foreground service started with notification")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Foreground service started with notification")
 
         // Start updating UI using handler
         updateSeekBarProgress()
 
         //setupAudioTrack()
         player = WavResPlayer(_context)
-        //textView.text = stringFromJNI()
-
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -87,13 +92,13 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createAudioManager() {
-        Log.d("grupo 11", "Creating AudioManager instance")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating AudioManager instance")
         audioManager = _context.getSystemService(AUDIO_SERVICE) as AudioManager
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createMediaSession() {
-        Log.d("grupo 11", "Creating MediaSession instance")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating MediaSession instance")
         mediaSession = MediaSessionCompat(_context, "AudioService")
     }
 
@@ -101,40 +106,46 @@ class AudioService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
         when(action) {
-            "PLAY" -> {
+            ACTION_PLAY -> {
                 // pega o resId que veio do MainActivity
-                trackId = intent.getIntExtra("TRACK_RES_ID", -1)
+                trackId = intent.getIntExtra(EXTRA_TRACK, -1)
                 if (trackId != -1 && trackId != currentTrackResId) {
                     // troca de música
                     currentTrackResId = trackId
                     player.play(trackId)
+                    updateUiStateButton(true)
                 }
             }
-            "PAUSE" -> player.pause()
-            "STOP"  -> {
+            ACTION_PAUSE -> {
+                Log.d(LOG_TAG_AUDIO_SERVICE, "Service received ACTION_PAUSE")
+                player.pause()
+                updateUiStateButton(false)
+            }
+            ACTION_STOP  -> {
                 player.stop()
+                updateUiStateButton(false)
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
-            "SEEK"  -> {
-                val pos = intent.getIntExtra("SEEK_POSITION", 0)
+            ACTION_SEEK  -> {
+                intent.getIntExtra(EXTRA_POSITION, 0)
             }
-            "UPDATE_LOW_GAIN" -> {
-                val gain = intent.getFloatExtra("GAIN", -1f)
+            ACTION_UPDATE_LOW_GAIN -> {
+                val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
                 //UpdateGain is used just as an example to a kind of processing in the audio data
                 player.updateGain((gain.coerceIn(-15f, +15f) + 15f) / 30f)
 
                 player.updateLowBandGain(gain)
             }
-            "UPDATE_MID_GAIN" -> {
-                val gain = intent.getFloatExtra("GAIN", -1f)
+            ACTION_UPDATE_MID_GAIN -> {
+                val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
                 player.updateMidBandGain(gain)
             }
-            "UPDATE_HIGH_GAIN" -> {
-                val gain = intent.getFloatExtra("GAIN", -1f)
+            ACTION_UPDATE_HIGH_GAIN -> {
+                val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
                 player.updateHighBandGain(gain)
             }
-            else -> Log.d("grupo 11", "Unknown action: $action")
+            else -> Log.d(LOG_TAG_AUDIO_SERVICE, "Unknown action: $action")
         }
         return START_STICKY
     }
@@ -142,38 +153,50 @@ class AudioService : Service() {
     private fun updateSeekBarProgress() {
         handler.postDelayed(object : Runnable {
             override fun run() {
-                if (mediaPlayer != null && mediaPlayer!!.isPlaying) {
-                    val currentPosition = mediaPlayer!!.currentPosition
-                    val duration = mediaPlayer!!.duration
-                    Log.d("grupo 11", "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
+                if (player.isPlaying) {
+                    val currentPosition = player.getCurrentPosition()
+                    val duration = player.getDuration()
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
 
-                    val intent = Intent("UPDATE_UI")
-                    intent.putExtra("CURRENT_POSITION", currentPosition)
-                    intent.putExtra("DURATION", duration)
-
+                    val intent = Intent(ACTION_UPDATE_UI)
+                    intent.putExtra(EXTRA_CURRENT_POS, currentPosition)
+                    intent.putExtra(EXTRA_DURATION, duration)
+                    intent.putExtra(EXTRA_UI_PLAYING_STATE, true)
                     sendBroadcast(intent)
-                    Log.d("grupo 11", "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
                 } else {
-                    Log.d("grupo 11", "MediaPlayer is not playing.")
-                    val intent = Intent("UPDATE_UI")
-                    intent.putExtra("CURRENT_POSITION", 0)
-                    intent.putExtra("DURATION", 0)
-
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is not playing.")
+                    val intent = Intent(ACTION_UPDATE_UI)
+                    intent.putExtra(EXTRA_CURRENT_POS, 0)
+                    intent.putExtra(EXTRA_DURATION, 0)
+                    intent.putExtra(EXTRA_UI_PLAYING_STATE, false)
                     sendBroadcast(intent)
-                    Log.d("grupo 11", "Broadcast sent with Current Position: 0 and Duration: 0.")
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: 0 and Duration: 0.")
                 }
                 handler.postDelayed(this, 1000)
             }
         }, 1000)
     }
 
+    private fun updateUiStateButton(isPlaying: Boolean){
+        Log.d(LOG_TAG_AUDIO_SERVICE, "updateUiStateButton() called with: isPlaying = $isPlaying")
+        val intent = Intent(ACTION_UPDATE_UI)
+        if (isPlaying){
+            intent.putExtra(EXTRA_UI_PLAYING_STATE, true)
+        } else {
+            intent.putExtra(EXTRA_UI_PLAYING_STATE, false)
+        }
+        sendBroadcast(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        updateUiStateButton(false)
         handler.removeCallbacksAndMessages(null)
         mediaPlayer?.release()
         mediaPlayer = null
         mediaSession?.release()
-        Log.d("grupo 11", "Service onDestroy() called, MediaPlayer and MediaSession released")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Service onDestroy() called, MediaPlayer and MediaSession released")
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -183,19 +206,19 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createNotificationChannel() {
-        Log.d("grupo 11", "Creating notification channel")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating notification channel")
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
-            "Audio Service Channel",
+            NOTIFICATION_CHANNEL_NAME,
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.createNotificationChannel(serviceChannel)
-        Log.d("grupo 11", "Notification channel created")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Notification channel created")
     }
 
     private fun createNotification(): Notification {
-        Log.d("grupo 11", "Creating notification")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating notification")
         val notificationIntent = Intent(_context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
@@ -205,12 +228,7 @@ class AudioService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .build().also {
-                Log.d("grupo 11", "Notification created")
+                Log.d(LOG_TAG_AUDIO_SERVICE, "Notification created")
             }
-    }
-
-
-    companion object {
-        private const val CHANNEL_ID = "AudioServiceChannel"
     }
 }
