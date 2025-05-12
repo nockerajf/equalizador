@@ -9,8 +9,6 @@
 #define LOGD(...) ((void)0)
 #define LOGE(...) ((void)0)
 #endif
-
-
 void Biquad::setup(Type type, float Fs, float f0, float Q)
 {
     if (Fs <= 0.0f || f0 <= 0.0f || f0 >= Fs * 0.5f || Q <= 0.0f) {
@@ -19,13 +17,10 @@ void Biquad::setup(Type type, float Fs, float f0, float Q)
         b1 = 0.0f; b2 = 0.0f;
         return;
     }
-
-
     const float w0    = 2.0f * static_cast<float>(M_PI) * f0 / Fs;
     const float cosw0 = cosf(w0);
     const float sinw0 = sinf(w0);
     const float alpha = sinw0 / (2.0f * Q); // Bandwidth
-
 
     float b0_std, b1_std, b2_std; // Standard numerator coefficients
     float a0_std, a1_std, a2_std; // Standard denominator coefficients
@@ -58,7 +53,6 @@ void Biquad::setup(Type type, float Fs, float f0, float Q)
             a2_std =   1.0f - alpha;
             break;
     }
-
     if (a0_std == 0.0f) {
         a0 = 1.0f; a1 = 0.0f; a2 = 0.0f;
         b1 = 0.0f; b2 = 0.0f;
@@ -77,6 +71,5 @@ void Biquad::setup(Type type, float Fs, float f0, float Q)
             LOGE("Biquad::setup: DETECTED NaN or INF in final coefficients!");
         }
     }
-
     reset(); // Reset states after setup
 }

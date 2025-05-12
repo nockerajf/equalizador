@@ -4,31 +4,49 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.grupo11.equalizador.R
 import com.grupo11.equalizador.data.AudioTrack
 
 class AudioAdapter(
-    private val tracks: List<AudioTrack>,
-    private val onClick: (AudioTrack) -> Unit
-): RecyclerView.Adapter<AudioAdapter.Holder>() {
+    private val audioTracks: List<AudioTrack>,
+    private val onItemClick: (AudioTrack) -> Unit
+) : RecyclerView.Adapter<AudioAdapter.AudioViewHolder>() {
 
-    inner class Holder(item: View): RecyclerView.ViewHolder(item) {
-        private val tvTitle = item.findViewById<TextView>(R.id.textTitle)
-        fun bind(track: AudioTrack) {
-            tvTitle.text = track.title
-            itemView.setOnClickListener { onClick(track) }
+    private var selectedPosition = RecyclerView.NO_POSITION // Variável para rastrear a posição selecionada
+
+    inner class AudioViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        val titleTextView: TextView = itemView.findViewById(R.id.textTitle)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AudioViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_audio, parent, false)
+        return AudioViewHolder(view)
+    }
+    override fun onBindViewHolder(holder: AudioViewHolder, position: Int) {
+        val track = audioTracks[position]
+        holder.titleTextView.text = track.title
+
+        if (position == selectedPosition) {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.selected_item_background))
+        } else {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.default_item_background))
+        }
+
+        holder.itemView.setOnClickListener {
+            val previouslySelectedPosition = selectedPosition
+            selectedPosition = holder.adapterPosition
+
+            if (previouslySelectedPosition != RecyclerView.NO_POSITION) {
+                notifyItemChanged(previouslySelectedPosition) // Desmarca o item anterior
+            }
+            notifyItemChanged(selectedPosition) // Marca o novo item
+
+            onItemClick(track) // Chama o lambda de clique original
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
-        val v = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_audio, parent, false)
-        return Holder(v)
-    }
-    override fun getItemCount() = tracks.size
-    override fun onBindViewHolder(holder: Holder, pos: Int) {
-        holder.bind(tracks[pos])
-    }
-
+    override fun getItemCount() = audioTracks.size
 }
