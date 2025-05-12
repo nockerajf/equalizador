@@ -125,16 +125,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         /* seek global (posição da música) */
-        seekBarProgress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    currentPosition = progress
-                    sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, progress) })
-                }
-            }
-            override fun onStartTrackingTouch(sb: SeekBar?) { handler.removeCallbacksAndMessages(null) }
-            override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
-        })
+//        seekBarProgress.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+//            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+//                if (fromUser) {
+//                    currentPosition = progress
+//                    sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, progress) })
+//                }
+//            }
+//            override fun onStartTrackingTouch(sb: SeekBar?) { handler.removeCallbacksAndMessages(null) }
+//            override fun onStopTrackingTouch(sb: SeekBar?) { startAutoUpdate() }
+//        })
 
         /* ───── CONFIGURA EQUALIZADOR ───── */
         listOf(lowSeek, midSeek, highSeek).forEach { sb ->
@@ -190,14 +190,14 @@ class MainActivity : AppCompatActivity() {
         sendToService(action, Bundle().apply { putFloat(EXTRA_GAIN, gainDb.toFloat()) })
     }
 
-    private fun startAutoUpdate() {
-        handler.postDelayed(object : Runnable {
-            override fun run() {
-                seekBarProgress.progress = currentPosition
-                handler.postDelayed(this, 1000)
-            }
-        }, 1000)
-    }
+//    private fun startAutoUpdate() {
+//        handler.postDelayed(object : Runnable {
+//            override fun run() {
+//                seekBarProgress.progress = currentPosition
+//                handler.postDelayed(this, 1000)
+//            }
+//        }, 1000)
+//    }
 
     private fun sendToService(action: String, extras: Bundle?) {
         Log.i(LOG_TAG_MAIN_ACTIVITY, "sendToService() called with: action = $action, extras = $extras")
