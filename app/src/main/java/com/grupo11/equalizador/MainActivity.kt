@@ -19,6 +19,7 @@ import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UI_PLAYING_STATE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_UI
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
@@ -30,6 +31,7 @@ import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.DB_RANGE
 import com.grupo11.equalizador.utils.EqualizerConstants.DB_OFFSET
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_UI_PLAYING_STATE
 import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_MAIN_ACTIVITY
 
 
@@ -56,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     /* ───────────────── BROADCAST ───────────────── */
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
+            Log.i(LOG_TAG_MAIN_ACTIVITY, "broadcastReceiver onReceive() called")
             if (intent?.action == ACTION_UPDATE_UI) {
                 val pos = intent.getIntExtra(EXTRA_CURRENT_POS, 0)
                 val dur = intent.getIntExtra(EXTRA_DURATION, 0)
@@ -65,6 +68,21 @@ class MainActivity : AppCompatActivity() {
                     textViewCurrentTime.text = formatMs(pos)
                     textViewTotalTime.text   = formatMs(dur)
                 }
+            }
+
+            if (intent?.action == ACTION_UI_PLAYING_STATE) {
+                val uiState = intent.getBooleanExtra(EXTRA_UI_PLAYING_STATE,false)
+                Log.i(LOG_TAG_MAIN_ACTIVITY, "uiState: $uiState")
+                if (uiState) {
+                    playButton.isEnabled = false
+                    stopButton.isEnabled = true
+                    pauseButton.isEnabled = true
+                } else {
+                    playButton.isEnabled = true
+                    stopButton.isEnabled = false
+                    pauseButton.isEnabled = false
+                }
+
             }
         }
     }
@@ -146,6 +164,9 @@ class MainActivity : AppCompatActivity() {
         lowSeek   = findViewById(R.id.eqBand1)
         midSeek   = findViewById(R.id.eqBand3)
         highSeek  = findViewById(R.id.eqBand5)
+        playButton.isEnabled = true
+        stopButton.isEnabled = false
+        pauseButton.isEnabled = false
     }
 
     override fun onDestroy() {

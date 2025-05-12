@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.annotation.RawRes
 import com.grupo11.equalizador.NativeThreeBand
 import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_WAV_RES_PLAYER
+import kotlinx.coroutines.coroutineScope
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -23,15 +24,16 @@ class WavResPlayer(private val context: Context) {
 
     // Gain factor for the audio stream
     private var mGain: Float = 1.0f
+    private val sampleRate = 48_000
+    private var filter: NativeThreeBand = NativeThreeBand(sampleRate)
 
-    private lateinit var filter: NativeThreeBand
-    private val sr = 48_000
+    var isPlaying: Boolean = false
+
     init {
-        filter = NativeThreeBand(sr)
         filter.init(lowCut = 200f, midCenter = 1_000f, highCut = 5_000f)
 
         // Exemplo de buffer de teste
-        val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sr).toFloat() }
+        val pcm = FloatArray(1024) { Math.sin(2.0 * Math.PI * 440 * it / sampleRate).toFloat() }
         filter.process(pcm)
     }
 
@@ -96,6 +98,7 @@ class WavResPlayer(private val context: Context) {
 
                     // Start playback
                     track!!.play()
+                    isPlaying = true
 
                     // Stream the PCM payload
                     val buffer = ByteArray(minBufSize )
@@ -146,18 +149,13 @@ class WavResPlayer(private val context: Context) {
 
 // 2. Processar o buffer de floats com o equalizador C++
                         Log.d(LOG_TAG_WAV_RES_PLAYER, "Calling native filter process()") // Log 6: Antes de chamar o C++
-                        if (::filter.isInitialized) {
-                            filter.process(floatBuffer) // Assumindo que 'process' modifica 'floatBuffer' in-place
-                            Log.d(LOG_TAG_WAV_RES_PLAYER, "Native filter process() returned") // Log 7: Depois de chamar o C++
-                            // Opcional: logar alguns valores do floatBuffer APÓS o processamento
-                            if (numSamples > 0) {
-                                Log.d(LOG_TAG_WAV_RES_PLAYER, "First float sample after process: ${floatBuffer[0]}")
-                                if (numSamples > 100) Log.d(LOG_TAG_WAV_RES_PLAYER, "100th float sample after process: ${floatBuffer[99]}")
-                                Log.d(LOG_TAG_WAV_RES_PLAYER, "Last float sample after process: ${floatBuffer[numSamples - 1]}")
-                            }
-                        } else {
-                            Log.e(LOG_TAG_WAV_RES_PLAYER, "Native filter not initialized! Skipping native processing.") // Log 8: Filtro não inicializado
-                            // Se o filtro não estiver inicializado, o floatBuffer não foi modificado.
+                        filter.process(floatBuffer) // Assumindo que 'process' modifica 'floatBuffer' in-place
+                        Log.d(LOG_TAG_WAV_RES_PLAYER, "Native filter process() returned") // Log 7: Depois de chamar o C++
+                        // Opcional: logar alguns valores do floatBuffer APÓS o processamento
+                        if (numSamples > 0) {
+                            Log.d(LOG_TAG_WAV_RES_PLAYER, "First float sample after process: ${floatBuffer[0]}")
+                            if (numSamples > 100) Log.d(LOG_TAG_WAV_RES_PLAYER, "100th float sample after process: ${floatBuffer[99]}")
+                            Log.d(LOG_TAG_WAV_RES_PLAYER, "Last float sample after process: ${floatBuffer[numSamples - 1]}")
                         }
 
 
@@ -203,9 +201,12 @@ class WavResPlayer(private val context: Context) {
                     track!!.stop()
                     track!!.release()
                     track = null
+                    isPlaying = false
                 }
             } ?: throw IOException("Resource not found: $rawResId")
-        }.also { it.start() }
+        }.also {
+            it.start()
+        }
     }
 
     /** Holds the core WAV header info we need. */
@@ -256,11 +257,13 @@ class WavResPlayer(private val context: Context) {
     /** Pause playback (AudioTrack keeps its buffer, you can resume). */
     fun pause() {
         track?.pause()
+        isPlaying = false
     }
 
     /** Resume after a pause(). */
     fun resume() {
         track?.play()
+        isPlaying = true
     }
 
     /**
@@ -281,6 +284,7 @@ class WavResPlayer(private val context: Context) {
             release()
         }
         track = null
+        isPlaying = false
     }
 
     fun updateGain(gain: Float) {

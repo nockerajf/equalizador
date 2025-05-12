@@ -19,6 +19,7 @@ import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
+import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UI_PLAYING_STATE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_HIGH_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
@@ -32,6 +33,7 @@ import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_DURATION
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_TRACK
+import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_UI_PLAYING_STATE
 import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_AUDIO_SERVICE
 import com.grupo11.equalizador.utils.EqualizerConstants.NOTIFICATION_CHANNEL_NAME
 
@@ -112,11 +114,17 @@ class AudioService : Service() {
                     // troca de música
                     currentTrackResId = trackId
                     player.play(trackId)
+                    updateUiStateButton(true)
                 }
             }
-            ACTION_PAUSE -> player.pause()
+            ACTION_PAUSE -> {
+                Log.d(LOG_TAG_AUDIO_SERVICE, "Service received ACTION_PAUSE")
+                player.pause()
+                updateUiStateButton(false)
+            }
             ACTION_STOP  -> {
                 player.stop()
+                updateUiStateButton(false)
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
@@ -146,7 +154,7 @@ class AudioService : Service() {
     private fun updateSeekBarProgress() {
         handler.postDelayed(object : Runnable {
             override fun run() {
-                if (mediaPlayer != null && mediaPlayer!!.isPlaying) {
+                if (player.isPlaying) {
                     val currentPosition = mediaPlayer!!.currentPosition
                     val duration = mediaPlayer!!.duration
                     Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
@@ -154,8 +162,8 @@ class AudioService : Service() {
                     val intent = Intent(ACTION_UPDATE_UI)
                     intent.putExtra(EXTRA_CURRENT_POS, currentPosition)
                     intent.putExtra(EXTRA_DURATION, duration)
-
                     sendBroadcast(intent)
+                    updateUiStateButton(true)
                     Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
                 } else {
                     Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is not playing.")
@@ -164,6 +172,7 @@ class AudioService : Service() {
                     intent.putExtra(EXTRA_DURATION, 0)
 
                     sendBroadcast(intent)
+                    updateUiStateButton(false)
                     Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: 0 and Duration: 0.")
                 }
                 handler.postDelayed(this, 1000)
@@ -171,8 +180,20 @@ class AudioService : Service() {
         }, 1000)
     }
 
+    private fun updateUiStateButton(isPlaying: Boolean){
+        Log.d(LOG_TAG_AUDIO_SERVICE, "updateUiStateButton() called with: isPlaying = $isPlaying")
+        val intent = Intent(ACTION_UI_PLAYING_STATE)
+        if (isPlaying){
+            intent.putExtra(EXTRA_UI_PLAYING_STATE, true)
+        } else {
+            intent.putExtra(EXTRA_UI_PLAYING_STATE, false)
+        }
+        sendBroadcast(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        updateUiStateButton(false)
         handler.removeCallbacksAndMessages(null)
         mediaPlayer?.release()
         mediaPlayer = null
