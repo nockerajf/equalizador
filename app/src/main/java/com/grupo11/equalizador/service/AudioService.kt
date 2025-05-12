@@ -114,6 +114,9 @@ class AudioService : Service() {
                     currentTrackResId = trackId
                     player.play(trackId)
                     updateUiStateButton(true)
+                    handleUpdateLowGain(intent)
+                    handleUpdateMidGain(intent)
+                    handleUpdateHighGain(intent)
                 }
             }
             ACTION_PAUSE -> {
@@ -131,25 +134,47 @@ class AudioService : Service() {
                 intent.getIntExtra(EXTRA_POSITION, 0)
             }
             ACTION_UPDATE_LOW_GAIN -> {
-                val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
-                //UpdateGain is used just as an example to a kind of processing in the audio data
-                player.updateGain((gain.coerceIn(-15f, +15f) + 15f) / 30f)
-
-                player.updateLowBandGain(gain)
+                handleUpdateLowGain(intent)
             }
             ACTION_UPDATE_MID_GAIN -> {
-                val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
-                player.updateMidBandGain(gain)
+                handleUpdateMidGain(intent)
             }
             ACTION_UPDATE_HIGH_GAIN -> {
-                val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
-                player.updateHighBandGain(gain)
+                handleUpdateHighGain(intent)
             }
             else -> Log.d(LOG_TAG_AUDIO_SERVICE, "Unknown action: $action")
         }
         return START_STICKY
     }
+    private fun handleUpdateLowGain(intent: Intent) {
+        val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
+        if (gain != -1f) { // Verifica se o ganho foi extraído corretamente
+            player.updateLowBandGain(gain)
+            Log.d(LOG_TAG_AUDIO_SERVICE, "Updated low band gain to: $gain")
+        } else {
+            Log.w(LOG_TAG_AUDIO_SERVICE, "Could not extract low gain from intent")
+        }
+    }
 
+    private fun handleUpdateMidGain(intent: Intent) {
+        val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
+        if (gain != -1f) {
+            player.updateMidBandGain(gain)
+            Log.d(LOG_TAG_AUDIO_SERVICE, "Updated mid band gain to: $gain")
+        } else {
+            Log.w(LOG_TAG_AUDIO_SERVICE, "Could not extract mid gain from intent")
+        }
+    }
+
+    private fun handleUpdateHighGain(intent: Intent) {
+        val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
+        if (gain != -1f) {
+            player.updateHighBandGain(gain)
+            Log.d(LOG_TAG_AUDIO_SERVICE, "Updated high band gain to: $gain")
+        } else {
+            Log.w(LOG_TAG_AUDIO_SERVICE, "Could not extract high gain from intent")
+        }
+    }
     private fun updateSeekBarProgress() {
         handler.postDelayed(object : Runnable {
             override fun run() {
