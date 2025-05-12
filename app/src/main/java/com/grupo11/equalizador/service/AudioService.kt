@@ -38,6 +38,16 @@ import com.grupo11.equalizador.utils.EqualizerConstants.NOTIFICATION_CHANNEL_NAM
 
 
 class AudioService : Service() {
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var mediaPlayer: MediaPlayer? = null
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var audioManager: AudioManager? = null
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    var mediaSession: MediaSessionCompat? = null
+
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var notificationManager : NotificationManager? = null
 
@@ -49,23 +59,16 @@ class AudioService : Service() {
     private var currentTrackResId: Int = DEFAULT_TRACK_RESOURCE_ID
     private var trackId : Int = DEFAULT_TRACK_ID
 
-    public lateinit var player: WavResPlayer
-
-    // Used to inject Mocks
-
-    public fun setMockPlayer(player: WavResPlayer){
-        this.player = player
-    }
-
-    public fun setContext(context: Context){
-        this._context = context
-    }
+    private lateinit var player: WavResPlayer
 
     override fun onCreate() {
 
         super.onCreate()
         Log.d(LOG_TAG_AUDIO_SERVICE, "Service onCreate() called")
 
+        createMediaPlayerInstance()
+        createAudioManager()
+        createMediaSession()
 
         createNotificationChannel()
         startForeground(notificationId, createNotification())
@@ -76,6 +79,27 @@ class AudioService : Service() {
 
         //setupAudioTrack()
         player = WavResPlayer(_context)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createMediaPlayerInstance() {
+        mediaPlayer = MediaPlayer()
+        mediaPlayer!!.reset()
+        val fileDescriptor = _context.resources.openRawResourceFd(R.raw.dunno)
+        mediaPlayer!!.setDataSource(fileDescriptor.fileDescriptor, fileDescriptor.startOffset, fileDescriptor.length)
+        mediaPlayer!!.prepare()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createAudioManager() {
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating AudioManager instance")
+        audioManager = _context.getSystemService(AUDIO_SERVICE) as AudioManager
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun createMediaSession() {
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating MediaSession instance")
+        mediaSession = MediaSessionCompat(_context, "AudioService")
     }
 
 
@@ -179,7 +203,7 @@ class AudioService : Service() {
         }, 1000)
     }
 
-    public fun updateUiStateButton(isPlaying: Boolean){
+    private fun updateUiStateButton(isPlaying: Boolean){
         Log.d(LOG_TAG_AUDIO_SERVICE, "updateUiStateButton() called with: isPlaying = $isPlaying")
         val intent = Intent(ACTION_UPDATE_UI)
         if (isPlaying){
@@ -187,14 +211,16 @@ class AudioService : Service() {
         } else {
             intent.putExtra(EXTRA_UI_PLAYING_STATE, false)
         }
-        _context.sendBroadcast(intent)
+        sendBroadcast(intent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         updateUiStateButton(false)
         handler.removeCallbacksAndMessages(null)
-
+        mediaPlayer?.release()
+        mediaPlayer = null
+        mediaSession?.release()
         Log.d(LOG_TAG_AUDIO_SERVICE, "Service onDestroy() called, MediaPlayer and MediaSession released")
     }
 
