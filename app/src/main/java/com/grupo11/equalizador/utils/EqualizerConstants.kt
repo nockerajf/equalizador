@@ -17,7 +17,6 @@ object EqualizerConstants {
     const val EXTRA_POSITION         = "SEEK_POSITION"
     const val EXTRA_GAIN             = "GAIN"
 
-    const val ACTION_UI_PLAYING_STATE       = "UPDATE_UI"
     const val EXTRA_UI_PLAYING_STATE = "UI_STATE"
 
     /* faixa −15 dB … +15 dB  */
