@@ -97,12 +97,12 @@ class WavResPlayer(private val context: Context) {
                     track!!.play()
 
                     // Stream the PCM payload
-                    val buffer = ByteArray(minBufSize)
+                    val buffer = ByteArray(minBufSize *4)
                     while (!shouldStop) {
-// Dentro do método play() da classe WavResPlayer, dentro do loop while (!shouldStop)
+                        val startTime = System.currentTimeMillis() // Marca o início
 
-                        val read = input.read(buffer) // buffer é ByteArray(minBufSize)
-                        Log.d("WavResPlayer", "Read $read bytes from input stream") // Log 1: Quantos bytes foram lidos
+                        val read = input.read(buffer)
+                        Log.d("WavResPlayer", "Read $read bytes from input stream")
                         if (read <= 0) break
 
                         val bytesPerSample = header.bitsPerSample / 8
@@ -186,11 +186,13 @@ class WavResPlayer(private val context: Context) {
                             Log.d("WavResPlayer", "Skipping conversion back for unsupported bit depth or uninitialized filter.")
                         }
 
-// 4. Escrever o ByteArray processado no AudioTrack
-                        val written = track!!.write(buffer, 0, read) // write espera um ByteArray
-                        Log.d("WavResPlayer", "Wrote $written bytes to AudioTrack (Expected $read)") // Log 10: Quantos bytes foram escritos
+                        val written = track!!.write(buffer, 0, read)
+                        Log.d("WavResPlayer", "Wrote $written bytes to AudioTrack (Expected $read)")
 
-// Note: Se o 'written' for menor que 'read', pode indicar um problema no AudioTrack ou buffer cheio.
+                        val endTime = System.currentTimeMillis() // Marca o fim
+                        val duration = endTime - startTime
+                        Log.d("WavResPlayer", "Buffer processing took $duration ms") // Loga a duração
+
                         if (written < read) {
                             Log.w("WavResPlayer", "AudioTrack write warning: Wrote $written bytes, expected $read")
                         }

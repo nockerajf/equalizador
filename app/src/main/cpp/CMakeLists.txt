@@ -43,5 +43,12 @@ target_link_libraries(threebandfilter
 # 8) Visibilidade mínima do símbolo (ajuda no tamanho do .so)
 # Só vale para GCC/Clang (inclui toolchain do NDK)
 if(NOT WIN32)
-    target_compile_options(threebandfilter PRIVATE -fvisibility=hidden)
+    # Adiciona flags de otimização e define NDEBUG (remove logs de debug)
+    # -O3 é uma otimização mais agressiva que -O2. Comece com -O2 ou -O3.
+    # -DNDEBUG desativa o código dentro de #ifdef NDEBUG (como seus logs via __android_log_print se eles estiverem protegidos por essa macro, o que eles não estão explicitamente agora, mas é uma prática comum)
+    target_compile_options(threebandfilter PRIVATE
+            -fvisibility=hidden
+            -O2 # << ADICIONE ESTA LINHA OU -O3
+            -DNDEBUG # << ADICIONE ESTA LINHA (Opcional, mas boa prática)
+    )
 endif()
