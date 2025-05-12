@@ -80,7 +80,12 @@ class AudioService : Service() {
         //setupAudioTrack()
         player = WavResPlayer(_context)
     }
-
+    fun setMockPlayer(player: WavResPlayer) {
+        this.player = player
+    }
+    fun setContext(context: Context) {
+        this._context = context
+    }
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createMediaPlayerInstance() {
         mediaPlayer = MediaPlayer()
@@ -211,7 +216,7 @@ class AudioService : Service() {
         } else {
             intent.putExtra(EXTRA_UI_PLAYING_STATE, false)
         }
-        sendBroadcast(intent)
+        _context.sendBroadcast(intent)
     }
 
     override fun onDestroy() {
