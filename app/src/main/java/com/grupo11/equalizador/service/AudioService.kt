@@ -32,6 +32,7 @@ import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_DURATION
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_TRACK
+import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_AUDIO_SERVICE
 import com.grupo11.equalizador.utils.EqualizerConstants.NOTIFICATION_CHANNEL_NAME
 
 
@@ -57,15 +58,12 @@ class AudioService : Service() {
     private var currentTrackResId: Int = DEFAULT_TRACK_RESOURCE_ID
     private var trackId : Int = DEFAULT_TRACK_ID
 
-
-    private val LOG_TAG = "AudioService"
-
     private lateinit var player: WavResPlayer
 
     override fun onCreate() {
 
         super.onCreate()
-        Log.d(LOG_TAG, "Service onCreate() called")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Service onCreate() called")
 
         createMediaPlayerInstance()
         createAudioManager()
@@ -73,7 +71,7 @@ class AudioService : Service() {
 
         createNotificationChannel()
         startForeground(notificationId, createNotification())
-        Log.d(LOG_TAG, "Foreground service started with notification")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Foreground service started with notification")
 
         // Start updating UI using handler
         updateSeekBarProgress()
@@ -93,13 +91,13 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createAudioManager() {
-        Log.d(LOG_TAG, "Creating AudioManager instance")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating AudioManager instance")
         audioManager = _context.getSystemService(AUDIO_SERVICE) as AudioManager
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createMediaSession() {
-        Log.d(LOG_TAG, "Creating MediaSession instance")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating MediaSession instance")
         mediaSession = MediaSessionCompat(_context, "AudioService")
     }
 
@@ -140,7 +138,7 @@ class AudioService : Service() {
                 val gain = intent.getFloatExtra(EXTRA_GAIN, -1f)
                 player.updateHighBandGain(gain)
             }
-            else -> Log.d(LOG_TAG, "Unknown action: $action")
+            else -> Log.d(LOG_TAG_AUDIO_SERVICE, "Unknown action: $action")
         }
         return START_STICKY
     }
@@ -151,22 +149,22 @@ class AudioService : Service() {
                 if (mediaPlayer != null && mediaPlayer!!.isPlaying) {
                     val currentPosition = mediaPlayer!!.currentPosition
                     val duration = mediaPlayer!!.duration
-                    Log.d(LOG_TAG, "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
 
                     val intent = Intent(ACTION_UPDATE_UI)
                     intent.putExtra(EXTRA_CURRENT_POS, currentPosition)
                     intent.putExtra(EXTRA_DURATION, duration)
 
                     sendBroadcast(intent)
-                    Log.d(LOG_TAG, "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
                 } else {
-                    Log.d(LOG_TAG, "MediaPlayer is not playing.")
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is not playing.")
                     val intent = Intent(ACTION_UPDATE_UI)
                     intent.putExtra(EXTRA_CURRENT_POS, 0)
                     intent.putExtra(EXTRA_DURATION, 0)
 
                     sendBroadcast(intent)
-                    Log.d(LOG_TAG, "Broadcast sent with Current Position: 0 and Duration: 0.")
+                    Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: 0 and Duration: 0.")
                 }
                 handler.postDelayed(this, 1000)
             }
@@ -179,7 +177,7 @@ class AudioService : Service() {
         mediaPlayer?.release()
         mediaPlayer = null
         mediaSession?.release()
-        Log.d(LOG_TAG, "Service onDestroy() called, MediaPlayer and MediaSession released")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Service onDestroy() called, MediaPlayer and MediaSession released")
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -189,7 +187,7 @@ class AudioService : Service() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun createNotificationChannel() {
-        Log.d(LOG_TAG, "Creating notification channel")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating notification channel")
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
             NOTIFICATION_CHANNEL_NAME,
@@ -197,11 +195,11 @@ class AudioService : Service() {
         )
         notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.createNotificationChannel(serviceChannel)
-        Log.d(LOG_TAG, "Notification channel created")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Notification channel created")
     }
 
     private fun createNotification(): Notification {
-        Log.d(LOG_TAG, "Creating notification")
+        Log.d(LOG_TAG_AUDIO_SERVICE, "Creating notification")
         val notificationIntent = Intent(_context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
@@ -211,7 +209,7 @@ class AudioService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .build().also {
-                Log.d(LOG_TAG, "Notification created")
+                Log.d(LOG_TAG_AUDIO_SERVICE, "Notification created")
             }
     }
 }

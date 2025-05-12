@@ -27,4 +27,9 @@ object EqualizerConstants {
 
     const val NOTIFICATION_CHANNEL_NAME = "Audio Service Channel"
     const val CHANNEL_ID = "AudioServiceChannel"
+
+    const val LOG_TAG_WAV_RES_PLAYER = "WavResPlayer"
+    const val LOG_TAG_AUDIO_SERVICE = "AudioService"
+    const val LOG_TAG_MAIN_ACTIVITY = "MainActivity"
+
 }

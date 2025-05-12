@@ -30,6 +30,7 @@ import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_POSITION
 import com.grupo11.equalizador.utils.EqualizerConstants.EXTRA_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.DB_RANGE
 import com.grupo11.equalizador.utils.EqualizerConstants.DB_OFFSET
+import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_MAIN_ACTIVITY
 
 
 class MainActivity : AppCompatActivity() {
@@ -72,6 +73,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "onCreate() called")
 
         initViews()
 
@@ -93,11 +95,16 @@ class MainActivity : AppCompatActivity() {
         /* botões */
         playButton.setOnClickListener  {
             selectedTrackResId?.let {
+                Log.i(LOG_TAG_MAIN_ACTIVITY, "Play button clicked")
                 sendToService(ACTION_PLAY,  Bundle().apply { putInt(EXTRA_TRACK, it) })
             } ?: Toast.makeText(this, "Selecione uma faixa", Toast.LENGTH_SHORT).show()
         }
-        pauseButton.setOnClickListener { sendToService(ACTION_PAUSE, null) }
+        pauseButton.setOnClickListener {
+            Log.i(LOG_TAG_MAIN_ACTIVITY, "Pause button clicked")
+            sendToService(ACTION_PAUSE, null)
+        }
         stopButton.setOnClickListener  {
+            Log.i(LOG_TAG_MAIN_ACTIVITY, "Stop button clicked")
             sendToService(ACTION_STOP, null)
             sendToService(ACTION_SEEK, Bundle().apply { putInt(EXTRA_POSITION, 0) })
             seekBarProgress.progress = 0
@@ -127,6 +134,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews(){
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "initViews() called")
         recyclerView        = findViewById(R.id.audioTrackRecyclerView)
         playButton          = findViewById(R.id.button_play)
         pauseButton         = findViewById(R.id.button_pause)
@@ -141,6 +149,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "onDestroy() called")
         super.onDestroy()
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
         handler.removeCallbacksAndMessages(null)
@@ -160,6 +169,7 @@ class MainActivity : AppCompatActivity() {
     private fun sendGainToService(action: String, gainDb: Int) {
         // Se o serviço quer fator linear, converta:
         // val linear = 10f.pow(gainDb / 20f)
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "sendGainToService() called with: action = $action, gainDb = $gainDb")
         sendToService(action, Bundle().apply { putFloat(EXTRA_GAIN, gainDb.toFloat()) })
     }
 
@@ -173,6 +183,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendToService(action: String, extras: Bundle?) {
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "sendToService() called with: action = $action, extras = $extras")
         Intent(this, AudioService::class.java).also { intent ->
             intent.action = action
             extras?.let { intent.putExtras(it) }
