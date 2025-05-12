@@ -8,7 +8,6 @@ import android.util.Log
 import androidx.annotation.RawRes
 import com.grupo11.equalizador.NativeThreeBand
 import com.grupo11.equalizador.utils.EqualizerConstants.LOG_TAG_WAV_RES_PLAYER
-import kotlinx.coroutines.coroutineScope
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
@@ -26,6 +25,8 @@ class WavResPlayer(private val context: Context) {
     private var mGain: Float = 1.0f
     private val sampleRate = 48_000
     private var filter: NativeThreeBand = NativeThreeBand(sampleRate)
+    private lateinit var header: WavHeader
+    private var bytesProcessed: Int = 0
 
     var isPlaying: Boolean = false
 
@@ -54,7 +55,7 @@ class WavResPlayer(private val context: Context) {
             context.resources.openRawResourceFd(rawResId)?.use { afd ->
                 afd.createInputStream().use { input ->
                     // Parse WAV header (first 44 bytes)
-                    val header = readWavHeader(input)
+                    header = readWavHeader(input)
 
                     // Determine channel config
                     val channelConfig = when (header.numChannels) {
@@ -106,6 +107,7 @@ class WavResPlayer(private val context: Context) {
                         val startTime = System.currentTimeMillis() // Marca o início
 
                         val read = input.read(buffer)
+                        bytesProcessed += read // Track the number of bytes processed
                         Log.d(LOG_TAG_WAV_RES_PLAYER, "Read $read bytes from input stream")
                         if (read <= 0) break
 
@@ -202,6 +204,7 @@ class WavResPlayer(private val context: Context) {
                     track!!.release()
                     track = null
                     isPlaying = false
+                    bytesProcessed = 0
                 }
             } ?: throw IOException("Resource not found: $rawResId")
         }.also {
@@ -209,11 +212,26 @@ class WavResPlayer(private val context: Context) {
         }
     }
 
+    fun getDuration(): Int{
+        Log.d(LOG_TAG_WAV_RES_PLAYER, "getDuration() called")
+        val duration = header.dataSize / (header.sampleRate * header.numChannels * (header.bitsPerSample / 8))
+        Log.d(LOG_TAG_WAV_RES_PLAYER, "Duration: $duration")
+        return duration
+    }
+
+    fun getCurrentPosition(): Int {
+        Log.d(LOG_TAG_WAV_RES_PLAYER, "getCurrentPosition() called")
+        val position = bytesProcessed / (header.sampleRate * header.numChannels * (header.bitsPerSample / 8))
+        Log.d(LOG_TAG_WAV_RES_PLAYER, "Current Position: $position")
+        return position
+    }
+
     /** Holds the core WAV header info we need. */
     private data class WavHeader(
         val sampleRate: Int,
         val numChannels: Int,
-        val bitsPerSample: Int
+        val bitsPerSample: Int,
+        val dataSize: Int
     )
 
     /**
@@ -235,7 +253,7 @@ class WavResPlayer(private val context: Context) {
         val bits = buffer.getShort()
 
         var dataSize = 0
-        while (buffer.getInt() !== 0x61746164) { // "data" marker
+        while (buffer.getInt() != 0x61746164) { // "data" marker
             Log.d("WaveResPlayer", "Skipping non-data chunk")
             val size = buffer.getInt()
             wavStream.skip(size.toLong())
@@ -245,15 +263,17 @@ class WavResPlayer(private val context: Context) {
             buffer.rewind()
         }
         dataSize = buffer.getInt()
-        // We assume the next chunk is "data". If it's not, a more complex parser is needed.
-        Log.d("WaveResPlayer"," format ${format}, SampleRate $rate , NumChannels $channels , bitsPerSample $bits" )
+
+        Log.d("WaveResPlayer", "Format: $format, SampleRate: $rate, NumChannels: $channels, BitsPerSample: $bits, DataSize: $dataSize")
 
         return WavHeader(
             sampleRate = rate,
             numChannels = channels.toInt(),
-            bitsPerSample = bits.toInt()
+            bitsPerSample = bits.toInt(),
+            dataSize = dataSize
         )
     }
+
     /** Pause playback (AudioTrack keeps its buffer, you can resume). */
     fun pause() {
         track?.pause()
@@ -285,6 +305,7 @@ class WavResPlayer(private val context: Context) {
         }
         track = null
         isPlaying = false
+        bytesProcessed = 0
     }
 
     fun updateGain(gain: Float) {

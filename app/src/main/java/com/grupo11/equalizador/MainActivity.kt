@@ -19,7 +19,6 @@ import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UI_PLAYING_STATE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_UI
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
@@ -58,19 +57,11 @@ class MainActivity : AppCompatActivity() {
     /* ───────────────── BROADCAST ───────────────── */
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            Log.i(LOG_TAG_MAIN_ACTIVITY, "broadcastReceiver onReceive() called")
+            Log.i(LOG_TAG_MAIN_ACTIVITY, "broadcastReceiver onReceive() called with: intent = $intent")
             if (intent?.action == ACTION_UPDATE_UI) {
+                Log.i(LOG_TAG_MAIN_ACTIVITY, "ACTION_UPDATE_UI received")
                 val pos = intent.getIntExtra(EXTRA_CURRENT_POS, 0)
                 val dur = intent.getIntExtra(EXTRA_DURATION, 0)
-                if (dur > 0) {
-                    seekBarProgress.max      = dur
-                    seekBarProgress.progress = pos
-                    textViewCurrentTime.text = formatMs(pos)
-                    textViewTotalTime.text   = formatMs(dur)
-                }
-            }
-
-            if (intent?.action == ACTION_UI_PLAYING_STATE) {
                 val uiState = intent.getBooleanExtra(EXTRA_UI_PLAYING_STATE,false)
                 Log.i(LOG_TAG_MAIN_ACTIVITY, "uiState: $uiState")
                 if (uiState) {
@@ -82,7 +73,13 @@ class MainActivity : AppCompatActivity() {
                     stopButton.isEnabled = false
                     pauseButton.isEnabled = false
                 }
-
+                Log.i(LOG_TAG_MAIN_ACTIVITY, "pos: $pos, dur: $dur")
+                if (dur > 0) {
+                    seekBarProgress.max      = dur
+                    seekBarProgress.progress = pos
+                    textViewCurrentTime.text = formatMs(pos)
+                    textViewTotalTime.text   = formatMs(dur)
+                }
             }
         }
     }

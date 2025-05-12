@@ -19,7 +19,6 @@ import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PAUSE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_PLAY
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_SEEK
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_STOP
-import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UI_PLAYING_STATE
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_HIGH_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_LOW_GAIN
 import com.grupo11.equalizador.utils.EqualizerConstants.ACTION_UPDATE_MID_GAIN
@@ -155,24 +154,23 @@ class AudioService : Service() {
         handler.postDelayed(object : Runnable {
             override fun run() {
                 if (player.isPlaying) {
-                    val currentPosition = mediaPlayer!!.currentPosition
-                    val duration = mediaPlayer!!.duration
+                    val currentPosition = player.getCurrentPosition()
+                    val duration = player.getDuration()
                     Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is playing. Current Position: $currentPosition, Duration: $duration.")
 
                     val intent = Intent(ACTION_UPDATE_UI)
                     intent.putExtra(EXTRA_CURRENT_POS, currentPosition)
                     intent.putExtra(EXTRA_DURATION, duration)
+                    intent.putExtra(EXTRA_UI_PLAYING_STATE, true)
                     sendBroadcast(intent)
-                    updateUiStateButton(true)
                     Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: $currentPosition and Duration: $duration.")
                 } else {
                     Log.d(LOG_TAG_AUDIO_SERVICE, "MediaPlayer is not playing.")
                     val intent = Intent(ACTION_UPDATE_UI)
                     intent.putExtra(EXTRA_CURRENT_POS, 0)
                     intent.putExtra(EXTRA_DURATION, 0)
-
+                    intent.putExtra(EXTRA_UI_PLAYING_STATE, false)
                     sendBroadcast(intent)
-                    updateUiStateButton(false)
                     Log.d(LOG_TAG_AUDIO_SERVICE, "Broadcast sent with Current Position: 0 and Duration: 0.")
                 }
                 handler.postDelayed(this, 1000)
@@ -182,7 +180,7 @@ class AudioService : Service() {
 
     private fun updateUiStateButton(isPlaying: Boolean){
         Log.d(LOG_TAG_AUDIO_SERVICE, "updateUiStateButton() called with: isPlaying = $isPlaying")
-        val intent = Intent(ACTION_UI_PLAYING_STATE)
+        val intent = Intent(ACTION_UPDATE_UI)
         if (isPlaying){
             intent.putExtra(EXTRA_UI_PLAYING_STATE, true)
         } else {
