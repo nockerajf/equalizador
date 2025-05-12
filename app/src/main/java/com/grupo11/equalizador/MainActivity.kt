@@ -77,9 +77,8 @@ class MainActivity : AppCompatActivity() {
                 if (dur > 0) {
                     seekBarProgress.max      = dur
                     seekBarProgress.progress = pos
-                    textViewCurrentTime.text = formatMs(pos)
-                    textViewTotalTime.text   = formatMs(dur)
-                }
+                    textViewCurrentTime.text = formatMs(pos * 1000)
+                    textViewTotalTime.text   = formatMs(dur * 1000)                }
             }
         }
     }
@@ -210,8 +209,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun formatMs(ms: Int): String {
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "formatMs() called with: ms = $ms")
         val s = (ms / 1000) % 60
         val m = (ms / 1000) / 60
+        Log.i(LOG_TAG_MAIN_ACTIVITY, "formatMs() returning: %d:%02d".format(m, s))
         return "%d:%02d".format(m, s)
     }
 
